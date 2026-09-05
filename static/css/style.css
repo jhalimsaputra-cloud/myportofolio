@@ -1,13 +1,18 @@
+/* =========================
+   Global Resets & Variables
+   ========================= */
+
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
+    box-sizing: border-box; /* Memastikan padding tidak menambah dimensi total elemen */
 }
 
 html {
-    overflow-y: scroll;
+    overflow-y: scroll; /* Memaksa scrollbar selalu tampil untuk mencegah layout shift saat ganti halaman */
 }
 
+/* Deklarasi CSS Custom Properties (Variabel) untuk memudahkan theming dan konsistensi warna */
 :root {
     --ink: #1e3047;         
     --paper: #F2EFE7;       
@@ -29,11 +34,16 @@ h1, .brand {
     font-family: "Space Grotesk", -apple-system, sans-serif;
 }
 
+/* Container pembungkus utama agar konten tetap berada di tengah dengan batas maksimal lebar */
 .container {
     max-width: 960px;
     margin: 0 auto;
     padding: 0 1.5rem;
 }
+
+/* =========================
+   Header & Navigation
+   ========================= */
 
 .site-header {
     border-bottom: 1px solid var(--line);
@@ -64,15 +74,21 @@ h1, .brand {
     font-size: 0.95rem;
 }
 
+/* Indikator visual untuk membedakan halaman mana yang sedang aktif dikunjungi pengguna */
 .site-header nav a.active {
     color: var(--accent);
     font-weight: 700;
 }
 
+/* =========================
+   Hero Section (Index)
+   ========================= */
+
 .hero {
     padding: 4.5rem 0 5rem;
 }
 
+/* Menggunakan CSS Grid dengan named-areas agar reposisi elemen di mode mobile lebih mudah (tanpa mengubah struktur HTML) */
 .hero-grid {
     display: grid;
     grid-template-columns: 1.3fr 1fr;
@@ -99,6 +115,7 @@ h1, .brand {
     margin-bottom: 0.75rem;
 }
 
+/* Fluid typography menggunakan clamp: Ukuran font akan beradaptasi secara dinamis antara 3rem hingga 5rem berdasarkan lebar viewport (vw) */
 .hero-identity h1 {
     font-size: clamp(3rem, 7vw, 5rem);
     line-height: 0.95;
@@ -156,6 +173,7 @@ h1, .brand {
     position: relative;
 }
 
+/* Dekorasi blok latar belakang di belakang foto */
 .photo-block {
     position: absolute;
     top: 1.25rem;
@@ -216,21 +234,22 @@ h1, .brand {
     line-height: 1;
 }
 
-/* Education timeline */
+/* --- Education Timeline Logic --- */
 
 .education-timeline {
-    position: relative;
+    position: relative; /* Menjadi acuan positioning untuk garis vertikal (pseudo-element ::before) */
     display: flex;
     flex-direction: column;
     gap: 2rem;
 }
 
+/* Garis vertikal timeline dirender secara absolut membentang dari atas (top: 0) ke bawah (bottom: 0) container */
 .education-timeline::before {
     content: "";
     position: absolute;
     top: 0;
     bottom: 0;
-    left: 8.5rem;
+    left: 8.5rem; /* Menentukan posisi garis sejajar dengan celah antar kolom grid */
     width: 1px;
     background-color: var(--line);
 }
@@ -238,7 +257,7 @@ h1, .brand {
 .education-card {
     position: relative;
     display: grid;
-    grid-template-columns: 8.5rem 1fr;
+    grid-template-columns: 8.5rem 1fr; /* Kolom kiri untuk tahun dibuat fixed lebarnya agar sejajar sempurna dengan garis timeline */
     gap: 2rem;
 }
 
@@ -254,12 +273,13 @@ h1, .brand {
     padding-right: 1.25rem;
 }
 
+/* Titik poin (node) pada timeline menggunakan kalkulasi matematis (translateX) agar presisi membelah garis vertikal */
 .education-year::after {
     content: "";
     position: absolute;
     top: 0.55rem;
-    right: 0;
-    transform: translateX(50%);
+    right: 0; 
+    transform: translateX(50%); /* Menarik titik ke kanan sejauh 50% ukurannya sendiri agar exactly berpusat pada batas kolom */
     width: 0.7rem;
     height: 0.7rem;
     background-color: var(--accent);
@@ -276,9 +296,10 @@ h1, .brand {
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background-color: var(--paper);
-    transition: border-color 0.2s ease, transform 0.2s ease;
+    transition: border-color 0.2s ease, transform 0.2s ease; /* Transisi untuk interaksi micro-hover */
 }
 
+/* Memberikan umpan balik visual ketika kursor diarahkan ke kartu edukasi */
 .education-body:hover {
     border-color: var(--accent);
     transform: translateY(-2px);
@@ -315,6 +336,7 @@ h1, .brand {
     color: var(--ink);
 }
 
+/* Memastikan logo institusi tidak mengecil saat ukuran window menyusut (flex: 0 0 basis) */
 .education-logo {
     flex: 0 0 96px;
     display: flex;
@@ -326,10 +348,10 @@ h1, .brand {
     display: block;
     width: 96px;
     height: 96px;
-    object-fit: contain;
+    object-fit: contain; /* Mencegah distorsi rasio aspek logo */
 }
 
-/* Academic achievements */
+/* --- Academic Achievements --- */
 
 .achievements-section {
     border-top: 4px solid var(--line);
@@ -349,6 +371,7 @@ h1, .brand {
     font-weight: 500;
 }
 
+/* Menambahkan custom icon panah menggunakan pseudo-element alih-alih list-style bawaan browser */
 .achievements-list li::before {
     content: "→";
     position: absolute;
@@ -361,8 +384,12 @@ h1, .brand {
     color: var(--accent-dark);
 }
 
+/* Mencegah penumpukan garis (border) ganda antara elemen li terbawah dengan container parent-nya */
+.achievements-list li:last-child {
+    border-bottom: none;
+}
 
-/* Gallery */
+/* --- Gallery Section --- */
 
 .gallery-section {
     border-top: 4px solid var(--line);
@@ -370,14 +397,14 @@ h1, .brand {
 
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr); /* Otomatis membagi ruang menjadi 3 kolom dengan lebar proporsional (1 fraction) */
     gap: 1.5rem;
 }
 
 .gallery-item {
     position: relative;
-    overflow: hidden;
-    aspect-ratio: 4 / 3;
+    overflow: hidden; /* Memotong gambar yang melebihi batas saat di-scale/di-zoom */
+    aspect-ratio: 4 / 3; /* Menjaga semua thumbnail galeri memiliki proporsi landscape yang seragam tanpa peduli rasio gambar aslinya */
     border: 3px solid var(--ink);
     border-radius: var(--radius);
     background-color: var(--line);
@@ -391,6 +418,7 @@ h1, .brand {
     transition: transform 0.3s ease;
 }
 
+/* Efek zoom-in gambar perlahan tanpa melewati batas container berkat overflow: hidden di parent */
 .gallery-item:hover img {
     transform: scale(1.04);
 }
@@ -399,14 +427,16 @@ h1, .brand {
    Responsive Breakpoints
    ========================= */
 
+/* Penyesuaian untuk layar Tablet */
 @media (max-width: 900px) {
     .gallery-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, 1fr); /* Menurunkan jumlah kolom galeri menjadi 2 agar gambar tidak terlalu kecil */
     }
 }
 
+/* Penyesuaian untuk layar Mobile / Smartphone */
 @media (max-width: 600px) {
-    /* Hero section */
+    /* Mereset struktur area Grid pada Hero section menjadi satu kolom linear atas-ke-bawah */
     .hero-grid {
         grid-template-columns: 1fr;
         grid-template-areas:
@@ -423,13 +453,13 @@ h1, .brand {
         justify-content: flex-start;
     }
 
-    /* Education section */
     .education-section,
     .achievements-section,
     .gallery-section {
         padding: 3.5rem 0;
     }
 
+    /* Menggeser garis timeline ke kiri agar menyisakan ruang baca teks di layar HP */
     .education-timeline::before {
         left: 0.3rem;
     }
@@ -440,6 +470,7 @@ h1, .brand {
         padding-left: 1.25rem;
     }
 
+    /* Mereset orientasi teks tahun dan menonaktifkan kalkulasi transform timeline untuk mobile */
     .education-year {
         padding-top: 0;
         text-align: left;
@@ -450,9 +481,10 @@ h1, .brand {
         top: 0.35rem;
         left: -1.25rem;
         right: auto;
-        transform: none;
+        transform: none; /* Mereset translateX yang sebelumnya diterapkan untuk desktop */
     }
 
+    /* Membalik urutan konten secara visual (logo di atas, teks di bawah) tanpa mengubah HTML */
     .education-body {
         flex-direction: column-reverse;
         gap: 1.25rem;
@@ -468,7 +500,7 @@ h1, .brand {
         height: 72px;
     }
 
-    /* Gallery section */
+    /* Galeri menjadi 1 kolom penuh di layar HP */
     .gallery-grid {
         grid-template-columns: 1fr;
     }
