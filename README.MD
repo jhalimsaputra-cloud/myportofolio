@@ -7,7 +7,7 @@ Year : 2
 Repositori ini berisi kode sumber (*source code*) untuk website portofolio pribadi yang dikembangkan sebagai pemenuhan tugas dari mata kuliah Pemrograman Berbasis Platform (PBP) Fasilkom UI. 
 
 ## PWS Deployment Link
-* [PWS Deployment Link]((https://justin-evan-myportofolio.pws.cs.ui.ac.id/))
+* [PWS Deployment Link](https://justin-evan-myportofolio.pws.cs.ui.ac.id/)
 
 ## Setup & Cara Menjalankan Secara Lokal
 Untuk menjalankan proyek ini di komputer lokal Anda, ikuti langkah-langkah berikut:
