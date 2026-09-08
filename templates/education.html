@@ -12,10 +12,11 @@
 <body>
     <header class="site-header">
         <div class="container">
-            <a href="/" class="brand">Justin</a>
+            <a href="/" class="brand">{{ name }}</a>
             <nav>
-                <a href="/">Profile</a>
-                <a href="/education/" class="active">Education</a>
+                <a href="{% url 'main:show_main' %}">Profile</a>
+                <a href="{% url 'main:show_experience' %}">Experience</a>
+                <a href="{% url 'main:show_education' %}" class = "active">Education</a>
             </nav>
         </div>
     </header>
