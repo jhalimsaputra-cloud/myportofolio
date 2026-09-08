@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Justin - Skills</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <a href="/" class="brand">{{ name }}</a>
+            <nav>
+                <a href="{% url 'main:show_main' %}">Profile</a>
+                <a href="{% url 'main:show_experience' %}">Experience</a>
+                <a href="{% url 'main:show_education' %}">Education</a>
+                <a href="{% url 'main:show_skills' %}" class="active">Skills</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- Skills -->
+            <section class="skills-section">
+                <div class="section-heading">
+                    <p class="eyebrow">WHAT I WORK WITH</p>
+                    <h2>My Skills</h2>
+                </div>
+
+                <!-- Software Development -->
+                <div class="skill-type-block">
+                    <h3 class="skill-type-heading">Software Development</h3>
+
+                    <div class="skills-grid">
+                        {% for skill in software_skills %}
+                        <article class="skill-card">
+                            <div class="skill-card-icon">
+                                <img src="/static/img/{{ skill.image_filename }}" alt="{{ skill.name }} logo">
+                            </div>
+                            <div class="skill-card-body">
+                                <h4>{{ skill.name }}</h4>
+                                <p>{{ skill.description }}</p>
+                            </div>
+                        </article>
+                        {% empty %}
+                        <p class="empty-state">Belum ada skill Software Development yang ditambahkan.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Systems & Architecture -->
+                <div class="skill-type-block">
+                    <h3 class="skill-type-heading">Systems &amp; Architecture</h3>
+
+                    <div class="skills-grid">
+                        {% for skill in systems_skills %}
+                        <article class="skill-card">
+                            <div class="skill-card-icon">
+                                <img src="/static/img/{{ skill.image_filename }}" alt="{{ skill.name }} logo">
+                            </div>
+                            <div class="skill-card-body">
+                                <h4>{{ skill.name }}</h4>
+                                <p>{{ skill.description }}</p>
+                            </div>
+                        </article>
+                        {% empty %}
+                        <p class="empty-state">Belum ada skill Systems &amp; Architecture yang ditambahkan.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 Justin. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
+        </div>
+    </footer>
+</body>
+</html>
