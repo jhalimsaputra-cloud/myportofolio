@@ -562,3 +562,184 @@ h1, .brand {
     font-weight: 600;
 }
 
+/* =========================
+   Skills Page
+   ========================= */
+
+.skills-section {
+    padding: 4.5rem 0;
+}
+
+.skill-type-block {
+    margin-bottom: 3rem;
+    animation: fadeInUp 0.6s ease both;
+}
+
+.skill-type-block:nth-of-type(2) {
+    animation-delay: 0.1s;
+}
+
+.skill-type-block:last-child {
+    margin-bottom: 0;
+}
+
+.skill-type-heading {
+    position: relative;
+    font-family: "Space Grotesk", -apple-system, sans-serif;
+    font-size: 1.15rem;
+    color: var(--accent-dark);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--line);
+}
+
+/* Garis aksen pendek di bawah judul yang "tumbuh" saat halaman dimuat */
+.skill-type-heading::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 2.5rem;
+    height: 2px;
+    background-color: var(--accent);
+    border-radius: 2px;
+    animation: growLine 0.7s ease 0.3s both;
+    transform-origin: left;
+}
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+}
+
+.skill-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding: 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background-color: #fff;
+    transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+    animation: fadeInUp 0.5s ease both;
+}
+
+/* Efek stagger: tiap kartu muncul sedikit lebih lambat dari kartu sebelumnya */
+.skills-grid .skill-card:nth-child(1) { animation-delay: 0.05s; }
+.skills-grid .skill-card:nth-child(2) { animation-delay: 0.12s; }
+.skills-grid .skill-card:nth-child(3) { animation-delay: 0.19s; }
+.skills-grid .skill-card:nth-child(4) { animation-delay: 0.26s; }
+.skills-grid .skill-card:nth-child(5) { animation-delay: 0.33s; }
+.skills-grid .skill-card:nth-child(6) { animation-delay: 0.4s; }
+.skills-grid .skill-card:nth-child(n+7) { animation-delay: 0.45s; }
+
+.skill-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px -16px var(--accent);
+}
+
+.skill-card-icon {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--paper);
+    border-radius: 50%;
+    transition: transform 0.3s ease, background-color 0.25s ease;
+}
+
+.skill-card:hover .skill-card-icon {
+    transform: scale(1.08) rotate(-4deg);
+    background-color: var(--line);
+}
+
+.skill-card-icon img {
+    display: block;
+    width: 65%;
+    height: 65%;
+    object-fit: contain;
+}
+
+.skill-card-body h4 {
+    font-family: "Space Grotesk", -apple-system, sans-serif;
+    font-size: 1.05rem;
+    margin-bottom: 0.35rem;
+    transition: color 0.2s ease;
+}
+
+.skill-card:hover .skill-card-body h4 {
+    color: var(--accent-dark);
+}
+
+.skill-card-body p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* Pesan kosong ketika belum ada skill pada salah satu tipe */
+.skills-grid .empty-state {
+    grid-column: 1 / -1;
+    padding: 1.25rem;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    animation: fadeInUp 0.5s ease both;
+    transition: border-color 0.25s ease;
+}
+
+.skills-grid .empty-state:hover {
+    border-color: var(--accent);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes growLine {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+/* Untuk preferensi pengguna yang meminta pengurangan animasi */
+@media (prefers-reduced-motion: reduce) {
+    .skill-type-block,
+    .skill-card,
+    .empty-state,
+    .skill-type-heading::after {
+        animation: none;
+    }
+
+    .skill-card:hover {
+        transform: none;
+    }
+
+    .skill-card:hover .skill-card-icon {
+        transform: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .skills-section {
+        padding: 3.5rem 0;
+    }
+
+    .skills-grid {
+        grid-template-columns: 1fr;
+    }
+}
