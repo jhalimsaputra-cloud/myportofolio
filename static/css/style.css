@@ -54,6 +54,8 @@ h1, .brand {
     justify-content: space-between;
     align-items: center;
     padding: 1.25rem 1.5rem;
+    flex-wrap: wrap;
+    row-gap: 0.75rem;
 }
 
 .brand {
@@ -432,6 +434,20 @@ h1, .brand {
 
 /* Penyesuaian untuk layar Mobile / Smartphone */
 @media (max-width: 600px) {
+    .site-header .container {
+        justify-content: flex-start;
+    }
+
+    .site-header nav {
+        gap: 1.1rem;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .site-header nav a {
+        font-size: 0.88rem;
+    }
+
     /* Mereset struktur area Grid pada Hero section menjadi satu kolom linear atas-ke-bawah */
     .hero-grid {
         grid-template-columns: 1fr;
@@ -609,18 +625,18 @@ h1, .brand {
 
 .skills-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 1.25rem;
 }
 
 .skill-card {
     display: flex;
-    flex-direction: column;
-    gap: 0.9rem;
-    padding: 1.25rem;
+    align-items: center;
+    padding: 0;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background-color: #fff;
+    overflow: hidden;
     transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
     animation: fadeInUp 0.5s ease both;
 }
@@ -640,28 +656,42 @@ h1, .brand {
     box-shadow: 0 10px 24px -16px var(--accent);
 }
 
+/* Kolom kiri: logo, dipisahkan dari teks dengan garis pembatas (border-right) */
 .skill-card-icon {
-    flex: 0 0 auto;
-    width: 48px;
-    height: 48px;
+    flex: 0 0 108px;
+    align-self: stretch;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 1rem;
     background-color: var(--paper);
-    border-radius: 50%;
-    transition: transform 0.3s ease, background-color 0.25s ease;
+    border-right: 1px solid var(--line);
+    transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 .skill-card:hover .skill-card-icon {
-    transform: scale(1.08) rotate(-4deg);
     background-color: var(--line);
+    border-color: var(--accent);
 }
 
 .skill-card-icon img {
     display: block;
-    width: 65%;
-    height: 65%;
+    width: 100%;
+    max-width: 60px;
+    height: 60px;
     object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.skill-card:hover .skill-card-icon img {
+    transform: scale(1.08);
+}
+
+/* Kolom kanan: teks */
+.skill-card-body {
+    flex: 1;
+    min-width: 0;
+    padding: 1.1rem 1.25rem;
 }
 
 .skill-card-body h4 {
@@ -716,7 +746,7 @@ h1, .brand {
     }
 }
 
-/* Untuk preferensi pengguna yang meminta pengurangan animasi */
+/* Menghormati preferensi pengguna yang meminta pengurangan animasi */
 @media (prefers-reduced-motion: reduce) {
     .skill-type-block,
     .skill-card,
@@ -741,5 +771,19 @@ h1, .brand {
 
     .skills-grid {
         grid-template-columns: 1fr;
+    }
+
+    .skill-card-icon {
+        flex-basis: 84px;
+        padding: 0.75rem;
+    }
+
+    .skill-card-icon img {
+        max-width: 44px;
+        height: 44px;
+    }
+
+    .skill-card-body {
+        padding: 1rem;
     }
 }
