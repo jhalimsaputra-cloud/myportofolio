@@ -31,7 +31,7 @@ def show_education(request):
 
 def show_skills(request):
     context = {
-        'name': 'Justin',
+        'name': 'Justin Evan Halim Saputra',
         'software_skills': Skill.objects.filter(skill_type='Software'),
         'systems_skills': Skill.objects.filter(skill_type='Systems'),
     }
