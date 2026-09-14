@@ -54,10 +54,10 @@ Berikut adalah link log saya dengan ChatGPT:
 * https://chatgpt.com/share/6a9c4215-fe28-83ec-b179-5ee2f7112fa2
 
 ## Jawaban Pertanyaan Reflektif & AI Disclosure Tugas Individual 2 +++
-1. Alur ketika pengguna membuka halaman Skills, dari request hingga tampil di browser
+1. Alur ketika pengguna membuka halaman Skills, dari request hingga tampil di browser:
 Saat browser mengirim request GET ke path /skills/, Django pertama-tama mengeceknya di urls.py pada level proyek (root). Di sana terdapat pengaturan path('', include('main.urls')), sehingga request diteruskan ke urls.py milik aplikasi main. Di dalam urls.py aplikasi inilah path 'skills/' dicocokkan dan diarahkan ke view function show_skills (dengan name='show_skills', yang dapat dipanggil di template melalui {% url 'main:show_skills' %}). View kemudian mengambil data melalui model dengan memanggil Skill.objects.filter(skill_type='Software') dan Skill.objects.filter(skill_type='Systems'). Hasil query ini dibungkus ke dalam context dan dipanggil melalui render(request, 'main/skills.html', context). Template engine Django kemudian memproses skills.html, mengeksekusi template tag (seperti {% for %} dan {% empty %}), serta menyisipkan nilai dari context (misalnya {{ skill.name }}) menjadi HTML statis. Hasil HTML inilah yang dikirim kembali ke browser sebagai response, yang kemudian di-render bersama dengan style.css menjadi tampilan visual yang dilihat oleh pengguna.
 
-2. Kenapa data sebaiknya disimpan di model, bukan ditulis langsung di template?
+2. Kenapa data sebaiknya disimpan di model, bukan ditulis langsung di template:
 Penyimpanan data di model dilakukan untuk memisahkan logika data dari presentasi visual (Separation of Concerns). Jika data ditulis langsung di template (hardcoded), setiap kali ada penambahan atau perubahan data skill, saya harus mengedit source code dan melakukan deploy ulang aplikasi. Hal ini rawan memicu kesalahan ketik (typo) dan tidak scalable ketika jumlah skill bertambah banyak. Dengan menggunakan model dan database, saya dapat mengelola data melalui Django Admin Panel tanpa perlu menyentuh kode program. Selain itu, penggunaan struktur parameter seperti choices pada skill_type dapat mencegah kesalahan penulisan kategori. Data juga menjadi lebih mudah di-query dan difilter. Terakhir, pendekatan ini sangat berguna untuk unit testing. Saya bisa membuat atau menghapus objek Skill di database pengujian tanpa harus mengubah struktur HTML sama sekali.
 
 3. Perbedaan makemigrations dan migrate, beserta contoh:
