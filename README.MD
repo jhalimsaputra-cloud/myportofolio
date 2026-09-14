@@ -55,45 +55,50 @@ Berikut adalah link log saya dengan ChatGPT:
 
 ## Jawaban Pertanyaan Reflektif & AI Disclosure Tugas Individual 2 +++
 1. Alur ketika pengguna membuka halaman Skills, dari request hingga tampil di browser
-Saat browser mengirim request GET ke path Skills, Django pertama-tama mengeceknya di urls.py level proyek (root). Di sana ada path('', include('main.urls')), jadi request diteruskan ke urls.py milik aplikasi main. Di urls.py aplikasi inilah path 'skills/' dicocokkan dan diarahkan ke view function show_skills (dengan name='show_skills', dipanggil di template lewat {% url 'main:show_skills' %}). View kemudian mengambil data lewat model, memanggil Skill.objects.filter(skill_type='Software') dan Skill.objects.filter(skill_type='Systems') lalu membungkus hasilnya ke dalam context dan memanggil render(request, 'main/skills.html', context). Template engine Django kemudian memproses skills.html, mengeksekusi tag {% for %}/{% empty %} dan menyisipkan nilai dari context ({{ skill.name }}, dst) menjadi HTML statis. Hasil HTML ini dikirim balik ke browser sebagai response, yang lalu di-render bersama style.css menjadi tampilan halaman yang dilihat pengguna.
+Saat browser mengirim request GET ke path /skills/, Django pertama-tama mengeceknya di urls.py pada level proyek (root). Di sana terdapat pengaturan path('', include('main.urls')), sehingga request diteruskan ke urls.py milik aplikasi main. Di dalam urls.py aplikasi inilah path 'skills/' dicocokkan dan diarahkan ke view function show_skills (dengan name='show_skills', yang dapat dipanggil di template melalui {% url 'main:show_skills' %}).
+
+View kemudian mengambil data melalui model dengan memanggil Skill.objects.filter(skill_type='Software') dan Skill.objects.filter(skill_type='Systems'). Hasil query ini dibungkus ke dalam context dan dipanggil melalui render(request, 'main/skills.html', context). Template engine Django kemudian memproses skills.html, mengeksekusi template tag (seperti {% for %} dan {% empty %}), serta menyisipkan nilai dari context (misalnya {{ skill.name }}) menjadi HTML statis. Hasil HTML inilah yang dikirim kembali ke browser sebagai response, yang kemudian di-render bersama dengan style.css menjadi tampilan visual yang dilihat oleh pengguna.
 
 2. Kenapa data sebaiknya disimpan di model, bukan ditulis langsung di template?
-Karena model memisahkan data dari presentasi. Kalau data ditulis langsung di template (hardcoded), setiap kali saya mau menambah atau mengubah skill, saya harus mengedit source code dan deploy ulang aplikasi, rawan salah ketik dan tidak scalable begitu skill-nya banyak. Dengan model + database, saya (atau siapa pun yang punya akses admin) bisa menambah/mengubah data lewat Django admin panel tanpa menyentuh kode sama sekali. Selain itu, skill_type yang terstruktur lewat choices mencegah typo kategori, data jadi bisa di-query dan difilter (seperti yang saya lakukan untuk memisahkan software_skills dan systems_skills), dan yang penting untuk unit test — saya bisa membuat/menghapus objek Skill di database testing tanpa perlu mengubah template atau HTML manapun.
+Penyimpanan data di model dilakukan untuk memisahkan logika data dari presentasi visual (Separation of Concerns). Jika data ditulis langsung di template (hardcoded), setiap kali ada penambahan atau perubahan data skill, saya harus mengedit source code dan melakukan deploy ulang aplikasi. Hal ini rawan memicu kesalahan ketik (typo) dan tidak scalable ketika jumlah skill bertambah banyak.
+
+Dengan menggunakan model dan database, saya dapat mengelola data melalui Django Admin Panel tanpa perlu menyentuh kode program. Selain itu, penggunaan struktur parameter seperti choices pada skill_type dapat mencegah kesalahan penulisan kategori. Data juga menjadi lebih mudah di-query dan difilter. Terakhir, pendekatan ini sangat berguna untuk unit testing. Saya bisa membuat atau menghapus objek Skill di database pengujian tanpa harus mengubah struktur HTML sama sekali.
 
 3. Perbedaan makemigrations dan migrate, beserta contoh:
-makemigrations membuat file migrasi berdasarkan perbedaan antara model Python saat ini dengan riwayat migrasi sebelumnya. Perintah ini belum mengubah database sungguhan, hanya membuat "instruksi" perubahannya. migrate yang benar-benar mengeksekusi instruksi tersebut ke database, mengubah struktur tabel sesuai definisi model terbaru. Contohnya, kalau saya menambahkan field baru ke model Skill, misalnya year_learned = models.IntegerField(default=2023), saya harus menjalankan python manage.py makemigrations dulu. Django akan mendeteksi field baru ini dan membuat file migrasi yang mendeskripsikan penambahan kolom year_learned. Tapi tabel Skill di database masih belum berubah sampai saya jalankan python manage.py migrate, yang baru benar-benar menambahkan kolom tersebut ke tabel. Kalau saya cuma jalankan makemigrations tanpa migrate, aplikasi akan error saat mencoba mengakses skill.year_learned karena kolomnya belum ada di database.
+makemigrations berfungsi untuk membuat file migrasi berdasarkan perubahan atau perbedaan antara definisi model Python saat ini dengan riwayat migrasi sebelumnya. Perintah ini belum mengubah database sungguhan, melainkan hanya membuat "instruksi" atau draf perubahannya.
+
+migrate adalah perintah yang benar-benar mengeksekusi instruksi dari file migrasi tersebut ke dalam database, sehingga struktur tabel berubah menyesuaikan definisi model yang terbaru.
 
 AI Disclosure
-
-Dalam tugas ini, saya memutuskan untuk menambahkan 1 halaman baru di dalam portofolio saya yakni skill.html. Dalam membuat halaman ini saya dibantu menggunakan generative AI, yakni Gemini untuk membuat kerangka dasar (HTML, CSS, dan unit test). Namun, ada beberapa kesalahan dan kekurangan dari hasil AI ini sehingga saya perlu menganalisis dan mengubah beberapa bagian, sampai menambahkan elemen tertentu yang dibutuhkan. Berikut detilnya:
+Dalam pengerjaan tugas ini, saya memutuskan untuk menambahkan satu halaman baru di dalam portofolio saya, yakni skills.html. Dalam membuat halaman ini, saya dibantu oleh generative AI (Gemini) untuk membuat kerangka dasar (HTML, CSS, dan unit test). Namun, terdapat beberapa ketidaksesuaian dan kekurangan dari hasil AI tersebut, sehingga saya harus melakukan analisis, modifikasi, dan penambahan elemen agar sesuai dengan spesifikasi aplikasi saya. Berikut adalah detail perbaikannya:
 
 1. Data Skill Tidak Dikelompokkan Berdasarkan Kategori
-* AI awalnya hanya memberikan satu loop {% for skill in skills %} yang menampilkan seluruh skill dalam satu list tercampur, tanpa memisahkan berdasarkan skill_type (Software Development vs Systems & Architecture).
-* Saya memperbaikinya dengan memisahkan query menjadi dua variabel di view (software_skills dan systems_skills), lalu membuat dua blok section terpisah di template agar setiap kategori tampil dengan judul dan grup masing-masing.
+* Output AI: Awalnya hanya memberikan satu loop {% for skill in skills %} yang menampilkan seluruh skill dalam satu list tercampur, tanpa memisahkan berdasarkan skill_type.
+* Perbaikan: Saya memperbaiki ini dengan memisahkan query menjadi dua variabel di view (software_skills dan systems_skills), lalu membuat dua blok section terpisah di template agar setiap kategori tampil dengan judul dan grup masing-masing.
 
-2. Tidak Ada Penanganan Kondisi Kosong
-* Kerangka dasar dari AI tidak menyediakan mekanisme untuk menampilkan pesan ketika suatu kategori belum memiliki skill sama sekali, halaman hanya akan kosong tanpa keterangan apa-apa.
-* Saya menambahkan blok {% empty %} pada masing-masing loop kategori, sehingga muncul pesan spesifik seperti "Belum ada skill Software Development yang ditambahkan." sesuai kondisi datanya.
+2. Tidak Ada Penanganan Kondisi Kosong (Empty State)
+* Output AI: Kerangka dasar tidak menyediakan mekanisme ketika suatu kategori belum memiliki skill sama sekali (halaman hanya kosong tanpa keterangan).
+* Perbaikan: Saya menambahkan blok {% empty %} pada masing-masing loop kategori, sehingga akan muncul pesan spesifik seperti "Belum ada skill Software Development yang ditambahkan" sesuai kondisi datanya.
 
 3. Kesalahan Asumsi Tipe Field Gambar
-* AI menulis {% if skill.image %}<img src="{{ skill.image.url }}"> yang mengasumsikan field gambar bertipe ImageField/FileField dengan upload otomatis.
-* Padahal di model saya, field gambar bertipe CharField bernama image_filename yang menyimpan nama file statis. Saya perbaiki menjadi <img src="/static/{{ skill.image_filename }}"> agar sesuai struktur model yang sebenarnya.
+* Output AI: AI menulis {% if skill.image %}<img src="{{ skill.image.url }}">, yang mengasumsikan field gambar bertipe ImageField atau FileField dengan konfigurasi upload otomatis.
+* Perbaikan: Pada model saya, field gambar bertipe CharField dengan nama image_filename yang menyimpan nama file statis. Saya mengubahnya menjadi <img src="/static/{{ skill.image_filename }}"> agar sesuai dengan struktur model sebenarnya.
 
-4. Layout Kartu Skill Boros Ruang Kosong
-* CSS dasar dari AI menyusun logo dan teks secara vertikal dalam satu kolom sempit, sehingga saat kartu melebar mengisi grid, banyak ruang kosong di samping teks yang pendek, terlihat janggal terutama saat jumlah skill sedikit.
-* Saya merombak .skill-card menjadi layout dua kolom sejajar (logo di kiri, teks di kanan) dengan garis pembatas (border-right) di antara keduanya, dan memperbesar ukuran logo supaya proporsional dengan ruang kolom.
+4. Tata Letak (Layout) Kartu Skill yang Boros Ruang
+* Output AI: CSS dasar dari AI menyusun logo dan teks secara vertikal dalam satu kolom sempit. Saat kartu melebar mengikuti sistem grid, banyak ruang kosong yang tersisa di samping teks pendek sehingga terlihat janggal.
+* Perbaikan: Saya merombak class .skill-card menjadi layout dua kolom sejajar (logo di kiri, teks di kanan) dengan garis pembatas (border-right) di antara keduanya. Saya juga memperbesar ukuran logo supaya lebih proporsional dengan ruang kolom.
 
-5. Palet Warna Tidak Konsisten dengan Halaman Lain
-* CSS dasar dari AI menggunakan tema warna gelap (slate/navy) yang berdiri sendiri, berbeda total dari halaman Profile, Experience, dan Education yang sudah saya buat sebelumnya.
-* Saya menyesuaikan seluruh warna dan tipografi di halaman ini memakai CSS custom properties yang sama dengan yang sudah saya definisikan secara global (--ink, --paper, --accent, dst.), supaya seluruh halaman portofolio terlihat sebagai satu kesatuan desain, bukan halaman terpisah.
+5. Inkonsistensi Palet Warna dengan Halaman Lain
+* Output AI: Menggunakan tema warna gelap (slate/navy) mandiri yang berbeda total dari halaman Profile, Experience, dan Education yang sudah saya buat.
+* Perbaikan: Saya menyesuaikan seluruh warna dan tipografi di halaman ini menggunakan CSS custom properties global yang sudah saya definisikan sebelumnya (--ink, --paper, --accent, dst.). Hal ini memastikan seluruh halaman portofolio memiliki kesatuan desain (cohesive).
 
-6. Interaksi Statis Tanpa Animasi
-* Kerangka dasar hanya punya transisi hover sederhana (geser sedikit ke atas dan ganti warna border).
-* Saya menambahkan animasi entrance bertahap (stagger) untuk tiap kartu saat halaman dimuat, animasi garis aksen yang tumbuh di bawah judul kategori, serta dukungan prefers-reduced-motion supaya animasi tidak memaksa pada pengguna yang mengaktifkan pengaturan pengurangan gerak di perangkatnya.
+6. Interaksi yang Statis Tanpa Animasi
+* Output AI: Hanya memiliki transisi hover sederhana (bergeser sedikit ke atas dan mengubah warna border).
+* Perbaikan: Saya menambahkan animasi entrance bertahap (stagger) untuk tiap kartu saat halaman dimuat, animasi garis aksen yang memanjang di bawah judul kategori, serta implementasi media query prefers-reduced-motion agar animasi tidak mengganggu pengguna yang mengaktifkan pengaturan pengurangan gerak di perangkatnya.
 
-7. Unit Test Belum Menguji Pemisahan dan Kondisi Campuran
-* Unit test dasar hanya mencakup 3 skenario wajib (URL & template, data muncul, pesan kosong muncul), tapi belum memverifikasi bahwa data benar-benar terpisah sesuai kategori, maupun kondisi campuran (satu kategori sudah terisi, kategori lain masih kosong).
-* Saya menambahkan pengecekan assertNotContains agar pesan kosong benar-benar hilang saat data sudah ada, test skenario campuran (test_empty_state_shown_only_for_type_without_data), dan test yang memverifikasi langsung dari response.context bahwa software_skills dan systems_skills terisi dengan benar tanpa tertukar (test_skills_are_grouped_under_correct_type_in_context).
+7. Cakupan Unit Test yang Kurang Menyeluruh
+* Output AI: Unit test hanya mencakup 3 skenario wajib (URL & template cocok, data muncul, dan pesan kosong muncul). AI belum memverifikasi pemisahan data per kategori atau kondisi campuran.
+* Perbaikan: Saya menambahkan asersi assertNotContains agar pesan kosong terverifikasi hilang saat data sudah ada. Saya juga membuat skenario uji campuran (test_empty_state_shown_only_for_type_without_data) dan menguji langsung dari response.context untuk memastikan software_skills dan systems_skills terisi dengan benar tanpa tertukar (test_skills_are_grouped_under_correct_type_in_context).
 
 Berikut adalah link log saya dengan Gemini:
 * https://share.gemini.google/w6YHjWF4ke7I
