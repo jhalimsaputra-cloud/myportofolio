@@ -46,7 +46,7 @@ def create_skill(request):
         "form": form,
     }
 
-    return render(request, "skill_form.html", context)
+    return render(request, "skills_form.html", context)
 
 def delete_skill(request, skill_id):
     skill = get_object_or_404(Skill, pk=skill_id)
@@ -76,7 +76,7 @@ def update_skill(request, skill_id):
         "skill": skill,
     }
 
-    return render(request, "skill_form.html", context)
+    return render(request, "skills_form.html", context)
 
 def get_skills_json(request):
     name_query = request.GET.get("name", "").strip()
