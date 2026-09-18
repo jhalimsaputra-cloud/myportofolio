@@ -97,3 +97,46 @@ Dalam pengerjaan tugas ini, saya memutuskan untuk menambahkan satu halaman baru 
 
 Berikut adalah link log saya dengan Gemini:
 * https://share.gemini.google/w6YHjWF4ke7I
+
+## Jawaban Pertanyaan Reflektif & AI Disclosure Tugas Individual 3 +++
+
+1. Kenapa pakai ModelForm dan kenapa perlu {% csrf_token %}?
+Saya pakai ModelForm karena lebih praktis dan nggak perlu bikin form HTML dari awal satu per satu. Field di form juga bisa langsung ngikutin model yang sudah saya buat, jadi lebih konsisten dan mengurangi kemungkinan salah. Selain itu, validasi data juga jadi lebih gampang karena Django sudah bantu ngecek sesuai aturan di model. Sementara {% csrf_token %} dipakai buat keamanan. Token ini membantu mencegah request palsu dari website lain yang mencoba mengirim data ke aplikasi kita tanpa izin user. Jadi setiap form yang mengirim data dengan method POST sebaiknya pakai csrf_token.
+
+2. Kenapa JSON lebih sering dipakai daripada XML?
+JSON lebih populer karena formatnya lebih simpel, lebih ringkas, dan gampang dibaca baik oleh manusia maupun program. Di JavaScript juga JSON bisa langsung diubah jadi object, jadi cocok banget buat komunikasi antara frontend dan backend. Dibanding XML, JSON biasanya butuh lebih sedikit karakter dan strukturnya juga nggak seribet tag-tag XML.
+
+3. Kenapa model Django perlu diserialisasi sebelum dikembalikan sebagai JSON?
+Karena object dari model Django nggak bisa langsung dikirim dalam bentuk JSON. Model Django masih berupa object Python yang punya struktur dan atribut khusus. Jadi perlu proses serialization dulu supaya datanya diubah ke format yang bisa dipahami sebagai JSON, misalnya string, angka, list, atau dictionary. Setelah itu baru datanya bisa dikirim ke frontend atau dipakai aplikasi lain.
+
+AI Disclosure
+
+Dalam pengerjaan tugas ini, saya menambahkan fitur CRUD untuk halaman Skills pada portofolio saya. Untuk membuat kerangka awalnya, saya dibantu oleh generative AI (Gemini), terutama untuk contoh implementasi model, form, view, URL, serta template dasar. Namun, kode awal yang diberikan masih cukup umum dan belum sesuai dengan struktur serta kebutuhan portofolio saya. Karena itu, saya melakukan beberapa analisis dan perubahan agar implementasinya lebih sesuai dengan desain dan requirement tugas. Berikut beberapa perubahan utama yang saya lakukan:
+
+1. URL dan View Awalnya Masih Menggunakan Integer ID
+* Output AI: URL awal menggunakan pola seperti <int:id> pada fungsi update dan delete karena model awal masih memakai ID bawaan Django.
+* Perbaikan: Setelah saya menggunakan UUID pada model Skill, saya menyesuaikan URL menjadi <uuid:skill_id>. Parameter pada fungsi update_skill dan delete_skill juga saya ubah menjadi skill_id agar konsisten dengan URL dan model yang digunakan.
+
+2. Form Create dan Update Awalnya Dibuat Terpisah
+* Output AI: AI memberikan create_skill.html dan update_skill.html sebagai dua template yang berbeda, walaupun isi keduanya hampir sama.
+* Perbaikan: Saya menggabungkan kedua form tersebut menjadi satu file yaitu skill_form.html. Template ini dapat mengetahui apakah sedang digunakan untuk menambah atau mengubah data berdasarkan keberadaan object skill di context. Dengan begitu, kode menjadi lebih ringkas dan tidak banyak duplikasi.
+
+3. Delete Awalnya Hanya Menggunakan Konfirmasi Browser Biasa
+* Output AI: Tombol delete awal menggunakan onclick="return confirm(...)" dan langsung mengirim form POST.
+* Perbaikan: Saya menggantinya dengan komponen modal khusus skill_delete_modal.html. Modal ini menampilkan konfirmasi sebelum data benar-benar dihapus. Proses delete tetap menggunakan method POST dan {% csrf_token %} supaya lebih aman. Saya juga memisahkan modal tersebut ke folder components agar template utama tidak terlalu penuh.
+
+4. Tampilan Awal Tidak Konsisten dengan Halaman Portofolio Lain
+* Output AI: CSS awal menggunakan warna dan class sendiri seperti .btn-add, .btn-update, dan .btn-delete, serta menggunakan styling langsung di dalam template.
+* Perbaikan: Saya memindahkan styling ke file CSS utama dan menggunakan kembali variabel global seperti --ink, --paper, --accent, --line, dan --radius. Saya juga menyesuaikan layout Skill Card agar logo berada di kiri dan informasi skill di kanan, serta membuat tombol Update dan Delete sejajar dengan tampilan yang sama seperti elemen lain di website.
+
+5. Alur JSON Awalnya Hanya Digunakan di JavaScript
+* Output AI: Data diambil menggunakan fetch() pada JavaScript, kemudian langsung dirender ke HTML dari sisi browser.
+* Perbaikan: Saya menyesuaikan mekanismenya dengan requirement tugas. Fungsi get_skills_json() melakukan serialization terhadap data Skill, lalu show_skills() mengambil response JSON tersebut dan melakukan serializers.deserialize() sebelum datanya diteruskan ke template. Dengan begitu, bagian serialization dan deserialization JSON dapat terlihat jelas pada implementasi Django saya.
+
+6. Fungsi View Awalnya Belum Sesuai dengan Alur Halaman Saya
+* Output AI: Fungsi create_skill() dan update_skill() awalnya melakukan redirect ke show_main atau show_skill, serta menggunakan parameter umum bernama id. Selain itu, create dan update diarahkan ke template yang berbeda.
+* Perbaikan: Saya mengubah redirect keduanya menjadi main:show_skills agar setelah create atau update pengguna kembali ke halaman Skills. Pada update_skill(), saya menggunakan get_object_or_404(Skill, pk=skill_id) untuk mengambil data berdasarkan UUID, kemudian menghubungkannya ke SkillForm menggunakan instance=skill. Create dan update juga saya arahkan ke satu template yang sama, yaitu skill_form.html.
+
+
+
+
