@@ -612,13 +612,11 @@ h1, .brand {
     padding: 4.5rem 0;
 }
 
-/* Header halaman skill: judul di kiri, tombol Add Skill di kanan */
-.skills-section .section-heading {
+.skill-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    margin-bottom: 2.5rem;
 }
 
 .skill-type-block {
@@ -726,9 +724,6 @@ h1, .brand {
 .skill-card-body {
     flex: 1;
     min-width: 0;
-    align-self: stretch;
-    display: flex;
-    flex-direction: column;
     padding: 1.1rem 1.25rem;
 }
 
@@ -748,7 +743,6 @@ h1, .brand {
     color: var(--text-muted);
 }
 
-/* Tombol Update dan Delete pada setiap skill card */
 .skill-actions {
     display: flex;
     align-items: center;
@@ -759,11 +753,16 @@ h1, .brand {
 }
 
 .skill-actions .button {
-    font-size: 0.85rem;
-    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 43px;
+    margin: 0;
+    padding: 0.65rem 1rem;
+    line-height: 1;
 }
 
-.delete-form {
+.skill-actions form {
     margin: 0;
 }
 
@@ -826,14 +825,13 @@ h1, .brand {
         padding: 3.5rem 0;
     }
 
-    .skills-section .section-heading {
+    .skill-header {
         flex-direction: column;
         align-items: flex-start;
     }
 
-    .skills-section .section-heading .button {
+    .skill-header .button {
         width: 100%;
-        text-align: center;
     }
 
     .skills-grid {
@@ -853,11 +851,11 @@ h1, .brand {
     .skill-card-body {
         padding: 1rem;
     }
-}
 
-/* =========================
-   Shared Project & Skill Form
-   ========================= */
+    .skill-actions {
+        flex-wrap: wrap;
+    }
+}
 
 .project-form,
 .skill-form {
@@ -916,7 +914,9 @@ h1, .brand {
 }
 
 .button {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     height: fit-content;
     border: 0;
     border-radius: var(--radius);
@@ -926,11 +926,11 @@ h1, .brand {
     cursor: pointer;
     font: inherit;
     font-weight: 700;
+    line-height: 1;
     text-decoration: none;
     transition:
         opacity 0.2s ease,
-        transform 0.2s ease,
-        background-color 0.2s ease;
+        transform 0.2s ease;
 }
 
 .button:hover {
@@ -1097,8 +1097,13 @@ h1, .brand {
 .project-delete-modal__actions {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
     gap: 0.75rem;
     margin-top: 1.5rem;
+}
+
+.project-delete-modal__actions form {
+    margin: 0;
 }
 
 .button-danger {

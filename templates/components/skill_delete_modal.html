@@ -1,66 +1,86 @@
-<p class="experience-status">
+<!-- Tombol pembuka modal -->
+<button
+    type="button"
+    class="button button-danger"
+    popovertarget="delete-skill-{{ skill.id }}"
+    aria-label="Hapus {{ skill.name }}"
+    title="Hapus Skill">
+    Delete
+</button>
+
+
+<!-- Delete Modal -->
+<div
+    id="delete-skill-{{ skill.id }}"
+    class="project-delete-modal"
+    popover="auto"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="delete-skill-title-{{ skill.id }}">
+
+    <!-- Backdrop -->
     <button
         type="button"
-        class="button button-danger"
+        class="project-delete-modal__backdrop"
         popovertarget="delete-skill-{{ skill.id }}"
-        aria-label="Hapus {{ skill.name }}"
-        title="Hapus skill">
-        Delete
+        popovertargetaction="hide"
+        aria-label="Tutup konfirmasi hapus">
     </button>
-</p>
 
-<div id="delete-skill-{{ skill.id }}"
-     class="project-delete-modal"
-     popover="auto"
-     role="dialog"
-     aria-modal="true"
-     aria-labelledby="delete-skill-title-{{ skill.id }}">
 
-    <button type="button"
-            class="project-delete-modal__backdrop"
+    <!-- Modal Content -->
+    <div class="project-delete-modal__content">
+
+        <!-- Close -->
+        <button
+            type="button"
+            class="project-delete-modal__close"
             popovertarget="delete-skill-{{ skill.id }}"
             popovertargetaction="hide"
             aria-label="Tutup konfirmasi hapus">
-    </button>
-
-    <div class="project-delete-modal__content">
-
-        <button type="button"
-                class="project-delete-modal__close"
-                popovertarget="delete-skill-{{ skill.id }}"
-                popovertargetaction="hide"
-                aria-label="Tutup konfirmasi hapus">
             ×
         </button>
+
 
         <h2 id="delete-skill-title-{{ skill.id }}">
             Hapus Skill?
         </h2>
+
 
         <p>
             Apakah Anda yakin ingin menghapus
             <strong>{{ skill.name }}</strong>?
         </p>
 
+
+        <!-- Modal Actions -->
         <div class="project-delete-modal__actions">
 
-            <button type="button"
-                    class="button button-secondary"
-                    popovertarget="delete-skill-{{ skill.id }}"
-                    popovertargetaction="hide">
+            <button
+                type="button"
+                class="button button-secondary"
+                popovertarget="delete-skill-{{ skill.id }}"
+                popovertargetaction="hide">
                 Batal
             </button>
 
-            <form method="post"
-                  action="{% url 'main:delete_skill' skill.id %}">
+
+            <form
+                method="post"
+                action="{% url 'main:delete_skill' skill.id %}">
+
                 {% csrf_token %}
 
-                <button type="submit"
-                        class="button button-danger">
+                <button
+                    type="submit"
+                    class="button button-danger">
                     Ya, Hapus
                 </button>
+
             </form>
 
         </div>
+
     </div>
+
 </div>

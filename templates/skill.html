@@ -21,7 +21,6 @@
                     <h2>My Skills</h2>
                 </div>
 
-                <!-- Add Skill -->
                 <a href="{% url 'main:create_skill' %}"
                    class="button">
                     Add Skill
@@ -43,56 +42,54 @@
 
                     {% for skill in software_skills %}
 
-                        <article class="skill-card">
+                    <article class="skill-card">
 
-                            <!-- Skill Image -->
-                            <div class="skill-card-icon">
+                        <!-- Logo -->
+                        <div class="skill-card-icon">
 
-                                <img
-                                    src="{% static 'img/' %}{{ skill.image_filename }}"
-                                    alt="{{ skill.name }} logo">
+                            <img
+                                src="{% static 'img/' %}{{ skill.image_filename }}"
+                                alt="{{ skill.name }} logo">
 
-                            </div>
-
-
-                            <!-- Skill Content -->
-                            <div class="skill-card-body">
-
-                                <h4>
-                                    {{ skill.name }}
-                                </h4>
-
-                                <p>
-                                    {{ skill.description }}
-                                </p>
+                        </div>
 
 
-                                <!-- CRUD Actions -->
-                                <div class="skill-actions">
+                        <!-- Content -->
+                        <div class="skill-card-body">
 
-                                    <!-- Update -->
-                                    <a
-                                        href="{% url 'main:update_skill' skill.id %}"
-                                        class="button">
-                                        Update
-                                    </a>
+                            <h4>
+                                {{ skill.name }}
+                            </h4>
+
+                            <p>
+                                {{ skill.description }}
+                            </p>
 
 
-                                    <!-- Delete -->
-                                    {% include "components/skill_delete_modal.html" %}
+                            <!-- CRUD -->
+                            <div class="skill-actions">
 
-                                </div>
+                                <!-- Update -->
+                                <a
+                                    href="{% url 'main:update_skill' skill.id %}"
+                                    class="button">
+                                    Update
+                                </a>
+
+                                <!-- Delete -->
+                                {% include "components/skill_delete_modal.html" %}
 
                             </div>
 
-                        </article>
+                        </div>
 
+                    </article>
 
                     {% empty %}
 
-                        <p class="empty-state">
-                            Belum ada skill Software Development yang ditambahkan.
-                        </p>
+                    <p class="empty-state">
+                        Belum ada skill Software Development yang ditambahkan.
+                    </p>
 
                     {% endfor %}
 
@@ -114,56 +111,54 @@
 
                     {% for skill in systems_skills %}
 
-                        <article class="skill-card">
+                    <article class="skill-card">
 
-                            <!-- Skill Image -->
-                            <div class="skill-card-icon">
+                        <!-- Logo -->
+                        <div class="skill-card-icon">
 
-                                <img
-                                    src="{% static 'img/' %}{{ skill.image_filename }}"
-                                    alt="{{ skill.name }} logo">
+                            <img
+                                src="{% static 'img/' %}{{ skill.image_filename }}"
+                                alt="{{ skill.name }} logo">
 
-                            </div>
-
-
-                            <!-- Skill Content -->
-                            <div class="skill-card-body">
-
-                                <h4>
-                                    {{ skill.name }}
-                                </h4>
-
-                                <p>
-                                    {{ skill.description }}
-                                </p>
+                        </div>
 
 
-                                <!-- CRUD Actions -->
-                                <div class="skill-actions">
+                        <!-- Content -->
+                        <div class="skill-card-body">
 
-                                    <!-- Update -->
-                                    <a
-                                        href="{% url 'main:update_skill' skill.id %}"
-                                        class="button">
-                                        Update
-                                    </a>
+                            <h4>
+                                {{ skill.name }}
+                            </h4>
+
+                            <p>
+                                {{ skill.description }}
+                            </p>
 
 
-                                    <!-- Delete -->
-                                    {% include "components/skill_delete_modal.html" %}
+                            <!-- CRUD -->
+                            <div class="skill-actions">
 
-                                </div>
+                                <!-- Update -->
+                                <a
+                                    href="{% url 'main:update_skill' skill.id %}"
+                                    class="button">
+                                    Update
+                                </a>
+
+                                <!-- Delete -->
+                                {% include "components/skill_delete_modal.html" %}
 
                             </div>
 
-                        </article>
+                        </div>
 
+                    </article>
 
                     {% empty %}
 
-                        <p class="empty-state">
-                            Belum ada skill Systems &amp; Architecture yang ditambahkan.
-                        </p>
+                    <p class="empty-state">
+                        Belum ada skill Systems &amp; Architecture yang ditambahkan.
+                    </p>
 
                     {% endfor %}
 
