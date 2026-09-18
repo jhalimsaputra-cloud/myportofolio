@@ -48,6 +48,15 @@ def create_skill(request):
 
     return render(request, "skill_form.html", context)
 
+def delete_skill(request, skill_id):
+    skill = get_object_or_404(Skill, pk=skill_id)
+
+    if request.method == "POST":
+        skill.delete()
+        messages.success(request, "Skill berhasil dihapus!")
+
+    return redirect("main:show_skills")
+
 def update_skill(request, skill_id):
     skill = get_object_or_404(Skill, pk=skill_id)
 
