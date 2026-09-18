@@ -612,6 +612,15 @@ h1, .brand {
     padding: 4.5rem 0;
 }
 
+/* Header halaman skill: judul di kiri, tombol Add Skill di kanan */
+.skills-section .section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
 .skill-type-block {
     margin-bottom: 3rem;
     animation: fadeInUp 0.6s ease both;
@@ -717,6 +726,9 @@ h1, .brand {
 .skill-card-body {
     flex: 1;
     min-width: 0;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
     padding: 1.1rem 1.25rem;
 }
 
@@ -734,6 +746,25 @@ h1, .brand {
 .skill-card-body p {
     font-size: 0.9rem;
     color: var(--text-muted);
+}
+
+/* Tombol Update dan Delete pada setiap skill card */
+.skill-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 1rem;
+}
+
+.skill-actions .button {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.delete-form {
+    margin: 0;
 }
 
 /* Pesan kosong ketika belum ada skill pada salah satu tipe */
@@ -795,6 +826,16 @@ h1, .brand {
         padding: 3.5rem 0;
     }
 
+    .skills-section .section-heading {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .skills-section .section-heading .button {
+        width: 100%;
+        text-align: center;
+    }
+
     .skills-grid {
         grid-template-columns: 1fr;
     }
@@ -814,7 +855,12 @@ h1, .brand {
     }
 }
 
-.project-form {
+/* =========================
+   Shared Project & Skill Form
+   ========================= */
+
+.project-form,
+.skill-form {
     width: 100%;
     max-width: 100%;
     margin-top: 1.5rem;
@@ -831,22 +877,36 @@ h1, .brand {
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
     width: 100%;
     box-sizing: border-box;
     padding: 0.7rem;
     border: 1px solid var(--accent);
     border-radius: var(--radius);
+    background: #fff;
+    color: var(--ink);
     font: inherit;
     transition:
         border-color 0.2s ease,
         outline-color 0.2s ease;
 }
 
+.form-group textarea {
+    resize: vertical;
+}
+
 .form-group input:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.form-group select:focus {
     outline: 2px solid var(--accent);
     border-color: var(--accent);
+}
+
+.form-help {
+    margin-top: 0.35rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
 }
 
 .form-error {
@@ -867,6 +927,18 @@ h1, .brand {
     font: inherit;
     font-weight: 700;
     text-decoration: none;
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.button:hover {
+    opacity: 0.9;
+}
+
+.button:active {
+    transform: translateY(1px);
 }
 
 .button-secondary {
