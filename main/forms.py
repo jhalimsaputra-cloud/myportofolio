@@ -1,6 +1,6 @@
-from django.forms import ModelForm, TextInput, Textarea, URLInput
+from django.forms import ModelForm, TextInput, Textarea, URLInput, Select
 
-from main.models import Project
+from main.models import Project, Skill
 
 class ProjectForm(ModelForm):
     class Meta:
@@ -47,6 +47,45 @@ class ProjectForm(ModelForm):
             "project_image_url": URLInput(
                 attrs={
                     "placeholder": "https://drive.google.com/thumbnail?id=...&sz=w1000",
+                }
+            ),
+        }
+
+class SkillForm(ModelForm):
+    class Meta:
+        model = Skill
+        fields = [
+            "name",
+            "skill_type",
+            "description",
+            "image_filename",
+        ]
+
+        labels = {
+            "name": "Nama Skill",
+            "skill_type": "Tipe Skill",
+            "description": "Deskripsi Skill",
+            "image_filename": "Nama File Gambar",
+        }
+
+        widgets = {
+            "name": TextInput(
+                attrs={
+                    "placeholder": "Java",
+                    "maxlength": 100,
+                }
+            ),
+            "skill_type": Select(),
+            "description": Textarea(
+                attrs={
+                    "placeholder": "Jelaskan kemampuan atau pengalamanmu menggunakan skill ini",
+                    "rows": 3,
+                }
+            ),
+            "image_filename": TextInput(
+                attrs={
+                    "placeholder": "java_logo.png",
+                    "maxlength": 200,
                 }
             ),
         }

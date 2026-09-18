@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block meta %}
+    <title>
+        {% if skill %}
+            Edit Skill
+        {% else %}
+            Add Skill
+        {% endif %}
+        - {{ name }}
+    </title>
+{% endblock meta %}
+
+{% block content %}
+<main>
+    <section class="experience-section">
+        <div class="container">
+
+            {% if skill %}
+                <h1>Edit Skill</h1>
+            {% else %}
+                <h1>Add New Skill</h1>
+            {% endif %}
+
+            <form method="post"
+                {% if skill %}
+                    action="{% url 'main:update_skill' skill.id %}"
+                {% else %}
+                    action="{% url 'main:create_skill' %}"
+                {% endif %}
+                class="skill-form">
+
+                {% csrf_token %}
+
+                {% for field in form %}
+                    <div class="form-group">
+
+                        <label for="{{ field.id_for_label }}">
+                            {{ field.label }}
+                        </label>
+
+                        {{ field }}
+
+                        {% if field.help_text %}
+                            <p class="form-help">
+                                {{ field.help_text }}
+                            </p>
+                        {% endif %}
+
+                        {% for error in field.errors %}
+                            <p class="form-error">
+                                {{ error }}
+                            </p>
+                        {% endfor %}
+
+                    </div>
+                {% endfor %}
+
+                {% if skill %}
+                    <button type="submit" class="button">
+                        Update Skill
+                    </button>
+                {% else %}
+                    <button type="submit" class="button">
+                        Tambah Skill
+                    </button>
+                {% endif %}
+
+                <a href="{% url 'main:show_skills' %}"
+                   class="button button-secondary">
+                    Batal
+                </a>
+
+            </form>
+        </div>
+    </section>
+</main>
+{% endblock content %}

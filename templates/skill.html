@@ -1,56 +1,152 @@
-  {% extends 'base.html' %}
-  {% block content %}
-    <main>
-        <div class="container">
-            <!-- Skills -->
-            <section class="skills-section">
-                <div class="section-heading">
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<main>
+    <div class="container">
+
+        <section class="skills-section">
+
+            <div class="section-heading">
+                <div>
                     <p class="eyebrow">WHAT I WORK WITH</p>
                     <h2>My Skills</h2>
                 </div>
 
-                <!-- Software Development -->
-                <div class="skill-type-block">
-                    <h3 class="skill-type-heading">Software Development</h3>
+                <a href="{% url 'main:create_skill' %}"
+                   class="button">
+                    Add Skill
+                </a>
+            </div>
 
-                    <div class="skills-grid">
-                        {% for skill in software_skills %}
-                        <article class="skill-card">
-                            <div class="skill-card-icon">
-                                <img src="/static/img/{{ skill.image_filename }}" alt="{{ skill.name }} logo">
+
+            <!-- Software Development -->
+            <div class="skill-type-block">
+
+                <h3 class="skill-type-heading">
+                    Software Development
+                </h3>
+
+                <div class="skills-grid">
+
+                    {% for skill in software_skills %}
+
+                    <article class="skill-card">
+
+                        <div class="skill-card-icon">
+                            <img src="{% static skill.image_filename %}"
+                                 alt="{{ skill.name }} logo">
+                        </div>
+
+                        <div class="skill-card-body">
+
+                            <h4>{{ skill.name }}</h4>
+
+                            <p>{{ skill.description }}</p>
+
+                            <div class="skill-actions">
+
+                                <a href="{% url 'main:update_skill' skill.id %}"
+                                   class="button">
+                                    Update
+                                </a>
+
+                                <form method="post"
+                                      action="{% url 'main:delete_skill' skill.id %}"
+                                      class="delete-form"
+                                      onsubmit="return confirm('Apakah kamu yakin ingin menghapus skill ini?');">
+
+                                    {% csrf_token %}
+
+                                    <button type="submit"
+                                            class="button button-danger">
+                                        Delete
+                                    </button>
+
+                                </form>
+
                             </div>
-                            <div class="skill-card-body">
-                                <h4>{{ skill.name }}</h4>
-                                <p>{{ skill.description }}</p>
-                            </div>
-                        </article>
-                        {% empty %}
-                        <p class="empty-state">Belum ada skill Software Development yang ditambahkan.</p>
-                        {% endfor %}
-                    </div>
+
+                        </div>
+
+                    </article>
+
+                    {% empty %}
+
+                    <p class="empty-state">
+                        Belum ada skill Software Development yang ditambahkan.
+                    </p>
+
+                    {% endfor %}
+
                 </div>
+            </div>
 
-                <!-- Systems & Architecture -->
-                <div class="skill-type-block">
-                    <h3 class="skill-type-heading">Systems &amp; Architecture</h3>
 
-                    <div class="skills-grid">
-                        {% for skill in systems_skills %}
-                        <article class="skill-card">
-                            <div class="skill-card-icon">
-                                <img src="/static/img/{{ skill.image_filename }}" alt="{{ skill.name }} logo">
+            <!-- Systems & Architecture -->
+            <div class="skill-type-block">
+
+                <h3 class="skill-type-heading">
+                    Systems &amp; Architecture
+                </h3>
+
+                <div class="skills-grid">
+
+                    {% for skill in systems_skills %}
+
+                    <article class="skill-card">
+
+                        <div class="skill-card-icon">
+                            <img src="{% static skill.image_filename %}"
+                                 alt="{{ skill.name }} logo">
+                        </div>
+
+                        <div class="skill-card-body">
+
+                            <h4>{{ skill.name }}</h4>
+
+                            <p>{{ skill.description }}</p>
+
+                            <div class="skill-actions">
+
+                                <a href="{% url 'main:update_skill' skill.id %}"
+                                   class="button">
+                                    Update
+                                </a>
+
+                                <form method="post"
+                                      action="{% url 'main:delete_skill' skill.id %}"
+                                      class="delete-form"
+                                      onsubmit="return confirm('Apakah kamu yakin ingin menghapus skill ini?');">
+
+                                    {% csrf_token %}
+
+                                    <button type="submit"
+                                            class="button button-danger">
+                                        Delete
+                                    </button>
+
+                                </form>
+
                             </div>
-                            <div class="skill-card-body">
-                                <h4>{{ skill.name }}</h4>
-                                <p>{{ skill.description }}</p>
-                            </div>
-                        </article>
-                        {% empty %}
-                        <p class="empty-state">Belum ada skill Systems &amp; Architecture yang ditambahkan.</p>
-                        {% endfor %}
-                    </div>
+
+                        </div>
+
+                    </article>
+
+                    {% empty %}
+
+                    <p class="empty-state">
+                        Belum ada skill Systems &amp; Architecture yang ditambahkan.
+                    </p>
+
+                    {% endfor %}
+
                 </div>
-            </section>
-        </div>
-    </main>
-  {% endblock content %}
+            </div>
+
+        </section>
+
+    </div>
+</main>
+{% endblock content %}

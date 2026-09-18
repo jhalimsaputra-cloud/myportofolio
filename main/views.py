@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from main.models import Experience, Mahasiswa, Skill, Project
-from main.forms import ProjectForm
+from main.forms import ProjectForm, SkillForm
 
 
 def show_main(request):
@@ -33,13 +33,94 @@ def show_education(request):
     }
     return render(request, "education.html", context)
 
-def show_skills(request):
+def create_skill(request):
+    form = SkillForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Skill baru berhasil ditambahkan!")
+        return redirect("main:show_skills")
+
     context = {
-        'name': 'Justin Evan Halim Saputra',
-        'software_skills': Skill.objects.filter(skill_type='Software'),
-        'systems_skills': Skill.objects.filter(skill_type='Systems'),
+        "name": "Justin Evan Halim Saputra",
+        "form": form,
     }
-    return render(request, 'skill.html', context)
+
+    return render(request, "skill_form.html", context)
+
+def update_skill(request, skill_id):
+    skill = get_object_or_404(Skill, pk=skill_id)
+
+    form = SkillForm(
+        request.POST or None,
+        instance=skill
+    )
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Skill berhasil diperbarui!")
+        return redirect("main:show_skills")
+
+    context = {
+        "name": "Justin Evan Halim Saputra",
+        "form": form,
+        "skill": skill,
+    }
+
+    return render(request, "skill_form.html", context)
+
+def get_skills_json(request):
+    name_query = request.GET.get("name", "").strip()
+
+    skills = Skill.objects.all()
+
+    if name_query:
+        skills = skills.filter(name__icontains=name_query)
+
+    skills_json = serializers.serialize("json", skills)
+
+    return HttpResponse(
+        skills_json,
+        content_type="application/json"
+    )
+
+
+def show_skills(request):
+    json_response = get_skills_json(request)
+
+    skills = serializers.deserialize(
+        "json",
+        json_response.content.decode("utf-8"),
+    )
+
+    skills = [
+        skill.object
+        for skill in skills
+    ]
+
+    software_skills = [
+        skill
+        for skill in skills
+        if skill.skill_type == "Software"
+    ]
+
+    systems_skills = [
+        skill
+        for skill in skills
+        if skill.skill_type == "Systems"
+    ]
+
+    name_query = request.GET.get("name", "").strip()
+
+    context = {
+        "name": "Justin Evan Halim Saputra",
+        "software_skills": software_skills,
+        "systems_skills": systems_skills,
+        "name_query": name_query,
+    }
+
+    return render(request, "skill.html", context)
+
 
 def create_project(request):
     form = ProjectForm(request.POST or None)
@@ -92,3 +173,4 @@ def delete_project(request, project_id):
         return redirect("main:show_projects")
 
     return redirect("main:show_projects")
+
