@@ -38,6 +38,12 @@ class Skill(models.Model):
         ('Software', 'Software Development'),
         ('Systems', 'Systems & Architecture'),
     )
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False
+    )
     
     name = models.CharField(max_length=100)
     skill_type = models.CharField(max_length=20, choices=SKILL_TYPES)
