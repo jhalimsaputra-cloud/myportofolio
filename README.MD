@@ -137,6 +137,9 @@ Dalam pengerjaan tugas ini, saya menambahkan fitur CRUD untuk halaman Skills pad
 * Output AI: Fungsi create_skill() dan update_skill() awalnya melakukan redirect ke show_main atau show_skill, serta menggunakan parameter umum bernama id. Selain itu, create dan update diarahkan ke template yang berbeda.
 * Perbaikan: Saya mengubah redirect keduanya menjadi main:show_skills agar setelah create atau update pengguna kembali ke halaman Skills. Pada update_skill(), saya menggunakan get_object_or_404(Skill, pk=skill_id) untuk mengambil data berdasarkan UUID, kemudian menghubungkannya ke SkillForm menggunakan instance=skill. Create dan update juga saya arahkan ke satu template yang sama, yaitu skill_form.html.
 
+Berikut adalah link log saya dengan Gemini:
+* https://share.gemini.google/eTITSlshYxYc
+
 
 
 
