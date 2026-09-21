@@ -18,25 +18,42 @@
         <a href="{% url 'main:show_main' %}" class="brand">{{ name }}</a>
         <nav>
             <a href="{% url 'main:show_main' %}" 
-               class="{% if request.resolver_match.url_name == 'show_main' %}active{% endif %}">
-               Profile
+            class="{% if request.resolver_match.url_name == 'show_main' %}active{% endif %}">
+            Profile
             </a>
             <a href="{% url 'main:show_experience' %}" 
-               class="{% if request.resolver_match.url_name == 'show_experience' %}active{% endif %}">
-               Experience
+            class="{% if request.resolver_match.url_name == 'show_experience' %}active{% endif %}">
+            Experience
             </a>
             <a href="{% url 'main:show_education' %}" 
-               class="{% if request.resolver_match.url_name == 'show_education' %}active{% endif %}">
-               Education
+            class="{% if request.resolver_match.url_name == 'show_education' %}active{% endif %}">
+            Education
             </a>
             <a href="{% url 'main:show_skills' %}" 
-               class="{% if request.resolver_match.url_name == 'show_skills' %}active{% endif %}">
-               Skills
+            class="{% if request.resolver_match.url_name == 'show_skills' %}active{% endif %}">
+            Skills
             </a>
             <a href="{% url 'main:show_projects' %}" 
-               class="{% if request.resolver_match.url_name == 'show_projects' %}active{% endif %}">
-               Projects
+            class="{% if request.resolver_match.url_name == 'show_projects' %}active{% endif %}">
+            Projects
             </a>
+
+            {% if user.is_authenticated %}
+                <span class="nav-user">{{ user.username }}</span>
+                <a href="{% url 'main:logout' %}"
+                class="{% if request.resolver_match.url_name == 'logout' %}active{% endif %}">
+                Logout
+                </a>
+            {% else %}
+                <a href="{% url 'main:login' %}"
+                class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}">
+                Login
+                </a>
+                <a href="{% url 'main:register' %}"
+                class="{% if request.resolver_match.url_name == 'register' %}active{% endif %}">
+                Register
+                </a>
+            {% endif %}
         </nav>
     </div>
   </header>
