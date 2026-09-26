@@ -50,6 +50,7 @@ class Skill(models.Model):
     skill_type = models.CharField(max_length=20, choices=SKILL_TYPES)
     description = models.TextField()
     image_filename = models.CharField(max_length=200, help_text="Contoh: 'img/java_logo.png' atau 'image_127101.png'")
+    starred_by = models.ManyToManyField(User, related_name="starred_skills", blank = True)
 
 class Project(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
