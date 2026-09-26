@@ -140,7 +140,7 @@ Dalam pengerjaan tugas ini, saya menambahkan fitur CRUD untuk halaman Skills pad
 Berikut adalah link log saya dengan Gemini:
 * https://share.gemini.google/eTITSlshYxYc
 
-## AI Disclosure Tugas Individual 3 +++
+## AI Disclosure Tugas Individual 4 +++
 
 AI Disclosure
 
