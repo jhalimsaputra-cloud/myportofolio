@@ -21,10 +21,12 @@
                     <h2>My Skills</h2>
                 </div>
 
-                <a href="{% url 'main:create_skill' %}"
-                   class="button">
-                    Add Skill
-                </a>
+                {% if user.is_superuser %}
+                    <a href="{% url 'main:create_skill' %}"
+                    class="button">
+                        Add Skill
+                    </a>
+                {% endif %}
 
             </div>
 
@@ -70,14 +72,16 @@
                             <div class="skill-actions">
 
                                 <!-- Update -->
+                                 {% if perms.main.change_skill %}
                                 <a
                                     href="{% url 'main:update_skill' skill.id %}"
                                     class="button">
                                     Update
                                 </a>
+                                {% endif %}
 
                                 <!-- Delete -->
-                                {% include "components/skill_delete_modal.html" %}
+                                 {% if user.is_superuser %}{% include "components/skill_delete_modal.html" %}{% endif %}
 
                             </div>
 
@@ -139,14 +143,16 @@
                             <div class="skill-actions">
 
                                 <!-- Update -->
+                                 {% if perms.main.change_skill %}
                                 <a
                                     href="{% url 'main:update_skill' skill.id %}"
                                     class="button">
                                     Update
                                 </a>
+                                {% endif %}
 
                                 <!-- Delete -->
-                                {% include "components/skill_delete_modal.html" %}
+                                 {% if user.is_superuser %}{% include "components/skill_delete_modal.html" %}{% endif %}
 
                             </div>
 

@@ -74,7 +74,7 @@ def delete_skill(request, skill_id):
 @login_required(login_url="/login/")
 def update_skill(request, skill_id):
 
-    if not request.user.is_superuser:
+    if not request.user.has_perm("main.change_skill"):
             raise PermissionDenied
     
     skill = get_object_or_404(Skill, pk=skill_id)
