@@ -39,7 +39,11 @@ def show_education(request):
     }
     return render(request, "education.html", context)
 
+@login_required(login_url="/login/")
 def create_skill(request):
+    if not request.user.is_superuser:
+            raise PermissionDenied
+    
     form = SkillForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
@@ -54,7 +58,11 @@ def create_skill(request):
 
     return render(request, "skills_form.html", context)
 
+@login_required(login_url="/login/")
 def delete_skill(request, skill_id):
+    if not request.user.is_superuser:
+            raise PermissionDenied
+    
     skill = get_object_or_404(Skill, pk=skill_id)
 
     if request.method == "POST":
@@ -63,7 +71,12 @@ def delete_skill(request, skill_id):
 
     return redirect("main:show_skills")
 
+@login_required(login_url="/login/")
 def update_skill(request, skill_id):
+
+    if not request.user.is_superuser:
+            raise PermissionDenied
+    
     skill = get_object_or_404(Skill, pk=skill_id)
 
     form = SkillForm(
@@ -83,19 +96,6 @@ def update_skill(request, skill_id):
     }
 
     return render(request, "skills_form.html", context)
-
-def update_skill(request, skill_id):
-    skill = get_object_or_404(Skill, pk = skill_id)
-    form = SkillForm(request.POST or None, instance = skill)
-
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success("Berhasil")
-        return redirect("main:show_skill")
-
-    context = {"nama" : "Justin Evan Halim Saputra",
-               "form" : form, "skill" : skill}
-    return render(request, )
 
 
 def get_skills_json(request):
