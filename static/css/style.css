@@ -1171,3 +1171,80 @@ h1, .brand {
     background: rgba(255, 255, 255, 0.25);
     font-size: 0.8rem;
 }
+
+.star-form {
+    display: inline-flex;
+    margin: 0;
+}
+
+.skill-actions .button.button-star-skill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+    min-width: 94px;
+    min-height: 43px;
+    padding: 4px 5px 4px 13px;
+    border: 2px solid var(--accent-dark);
+    border-radius: 999px;
+    background: var(--accent-dark);
+    color: white;
+    box-shadow: 0 2px 5px rgba(30, 48, 71, 0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.star-count-skill {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.star-icon-skill {
+    display: grid;
+    place-items: center;
+    width: 31px;
+    height: 31px;
+    flex: 0 0 31px;
+    border-radius: 50%;
+    background: var(--paper);
+    color: var(--accent-dark);
+    font-size: 1.25rem;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+
+.skill-actions .button.button-star-skill:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(30, 48, 71, 0.22);
+}
+
+.button-star-skill:hover .star-icon-skill {
+    transform: rotate(-15deg) scale(1.08);
+}
+
+.skill-actions .button.button-star-skill:active {
+    transform: translateY(0);
+}
+
+.skill-actions .button.button-star-skill:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+
+.skill-actions .button.button-star-skill.is-starred {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skill-actions .button.button-star-skill,
+    .star-icon-skill {
+        transition: none;
+    }
+
+    .skill-actions .button.button-star-skill:hover,
+    .button-star-skill:hover .star-icon-skill {
+        transform: none;
+    }
+}

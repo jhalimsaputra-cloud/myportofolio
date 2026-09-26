@@ -106,7 +106,7 @@ def get_skills_json(request):
     if name_query:
         skills = skills.filter(name__icontains=name_query)
 
-    skills_json = serializers.serialize("json", skills)
+    skills_json = serializers.serialize("json", skills, use_natural_foreign_keys=True)
 
     return HttpResponse(
         skills_json,
@@ -248,7 +248,7 @@ def logout_user(request):
 
 # Tanpa cek is_superuser: semua akun yang sudah login boleh memberi star
 @login_required(login_url="/login/")
-def toggle_star(request, project_id):
+def toggle_star_project(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
     if request.method == "POST":
@@ -260,6 +260,17 @@ def toggle_star(request, project_id):
             project.starred_by.add(request.user)
 
     return redirect("main:show_projects")
+
+@login_required(login_url="/login/")
+def toggle_star_skill(request, skill_id):
+    skill = get_object_or_404(Skill, pk=skill_id)
+
+    if request.method == "POST":
+        if request.user in skill.starred_by.all():
+            skill.starred_by.remove(request.user)
+        else:
+            skill.starred_by.add(request.user)
+    return redirect("main:show_skills")
 
 def show_test(request):
     context = {"name " : "Justin Evan Halim Saputra",
