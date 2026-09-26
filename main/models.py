@@ -64,3 +64,14 @@ class Project(models.Model):
 
     def __str__(self):
         return self.title
+
+class Buku(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length = 150)
+    author = models.CharField(max_length = 100)
+    stock = models.IntegerField()
+
+    def __str__ (self):
+        return self.title
+    def is_availabe(self):
+        return stock > 0

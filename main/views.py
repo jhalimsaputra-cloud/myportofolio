@@ -6,6 +6,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core import serializers
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.core.exceptions import PermissionDenied   
 
 from main.models import Experience, Mahasiswa, Skill, Project
 from main.forms import ProjectForm, SkillForm
@@ -83,6 +84,20 @@ def update_skill(request, skill_id):
 
     return render(request, "skills_form.html", context)
 
+def update_skill(request, skill_id):
+    skill = get_object_or_404(Skill, pk = skill_id)
+    form = SkillForm(request.POST or None, instance = skill)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success("Berhasil")
+        return redirect("main:show_skill")
+
+    context = {"nama" : "Justin Evan Halim Saputra",
+               "form" : form, "skill" : skill}
+    return render(request, )
+
+
 def get_skills_json(request):
     name_query = request.GET.get("name", "").strip()
 
@@ -135,8 +150,12 @@ def show_skills(request):
 
     return render(request, "skill.html", context)
 
-
+@login_required(login_url="/login/")
 def create_project(request):
+
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
     form = ProjectForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
@@ -177,8 +196,12 @@ def get_projects_json(request):
     projects_json = serializers.serialize("json", projects, use_natural_foreign_keys=True)
     return HttpResponse(projects_json, content_type="application/json")
 
+@login_required(login_url="/login/")
 def delete_project(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
+
+    if not request.user.is_superuser:
+        raise PermissionDenied
 
     if request.method == "POST":
         project.delete()
@@ -237,4 +260,9 @@ def toggle_star(request, project_id):
             project.starred_by.add(request.user)
 
     return redirect("main:show_projects")
+
+def show_test(request):
+    context = {"name " : "Justin Evan Halim Saputra",
+               "jurusan" : "Ilmu Komputer"}
+    return render(request, "formcoba.html", context)
 
