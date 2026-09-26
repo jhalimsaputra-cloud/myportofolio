@@ -140,6 +140,26 @@ Dalam pengerjaan tugas ini, saya menambahkan fitur CRUD untuk halaman Skills pad
 Berikut adalah link log saya dengan Gemini:
 * https://share.gemini.google/eTITSlshYxYc
 
+## AI Disclosure Tugas Individual 3 +++
+
+AI Disclosure
+
+Dalam pengerjaan tugas ini, saya memutuskan untuk mengimplementasikan access permission di halaman skills saya. Saya menambah fitur toggle star bagi para pengguna yang sudah login. Saya juga memberikan beberapa fitur yang hanya bisa diakses oleh editor(update) dan super user saja(update, delete, dan create). Sebagian besar referensi saya berasal dari Tutorial 3 sehingga saya jarang menggunakan AI. Saya hanya menggunakan Gemini untuk memberikan saya template awal HTML dan CSS. Berikut perbaikan dan analisisnya.
+
+1. Status Star Belum Cukup Jelas
+* Output AI: Tombol hanya menampilkan bintang dan angka. Pengguna harus melihat warna bintang untuk mengetahui apakah ia sudah memberi star.
+* Perbaikan: Saya menambahkan tulisan Star dan Starred sesuai status pengguna. Warna tombol juga ikut berubah ketika skill sudah diberi star.
+
+2. Tombol Belum Memiliki Keterangan yang Cukup
+* Output AI: Tombol belum memberi penjelasan tambahan tentang aksi yang akan dilakukan.
+* Perbaikan: Saya menambahkan keterangan Beri star atau Batalkan star melalui atribut title. Saya juga menambahkan aria-pressed untuk menunjukkan status tombol dan menandai ikon SVG sebagai elemen dekoratif.
+
+3. Tampilannya Belum Cocok dengan Halaman Skill
+* Output AI: Tombol berbentuk sederhana dan transparan, dengan warna abu-abu saat belum diberi star dan emas saat sudah diberi star.
+* Perbaikan: Saya membuat desain baru dengan warna yang sesuai dengan portofolio saya. Tombol ditempatkan di sisi kanan atas judul skill, sedangkan jumlah star ditampilkan dalam kotak kecil di dalam tombol. Saya juga menambahkan efek saat tombol disorot, ditekan, dan dipilih menggunakan keyboard. Untuk pengguna yang mengaktifkan pengurangan animasi, efek geraknya saya nonaktifkan melalui prefers-reduced-motion.
+
+Berikut adalah link log saya dengan Gemini:
+* https://share.gemini.google/OBextQA5HM9A
 
 
 
