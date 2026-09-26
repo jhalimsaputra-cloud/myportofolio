@@ -7,6 +7,7 @@ from django.core import serializers
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.exceptions import PermissionDenied   
+from django.contrib.messages import get_messages
 
 from main.models import Experience, Mahasiswa, Skill, Project
 from main.forms import ProjectForm, SkillForm
@@ -115,6 +116,7 @@ def get_skills_json(request):
 
 
 def show_skills(request):
+    list(get_messages(request))
     json_response = get_skills_json(request)
 
     skills = serializers.deserialize(
@@ -170,6 +172,7 @@ def create_project(request):
     return render(request, "projects_form.html", context)
 
 def show_projects(request):
+    list(get_messages(request))
     json_response = get_projects_json(request)
 
     projects = serializers.deserialize(
