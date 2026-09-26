@@ -1150,101 +1150,150 @@ h1, .brand {
     }
 }
 
-.star-form {
-    display: inline;
+.skill-card .skill-card-body {
+    align-self: stretch;
 }
 
-.button-star {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: var(--ink);
-}
-
-.button-star.is-starred {
-    background: var(--accent);
-}
-
-.star-count {
-    padding: 0.05rem 0.4rem;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.25);
-    font-size: 0.8rem;
-}
-
-.star-form {
-    display: inline-flex;
-    margin: 0;
-}
-
-.skill-actions .button.button-star-skill {
-    display: inline-flex;
+.skill-card-heading {
+    display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.45rem;
-    min-width: 94px;
-    min-height: 43px;
-    padding: 4px 5px 4px 13px;
-    border: 2px solid var(--accent-dark);
-    border-radius: 999px;
-    background: var(--accent-dark);
-    color: white;
-    box-shadow: 0 2px 5px rgba(30, 48, 71, 0.15);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-bottom: 0.8rem;
 }
 
-.star-count-skill {
-    font-size: 0.95rem;
+.skill-card-heading h4 {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.skill-card-heading .skill-star-form {
+    display: inline-flex;
+    flex: 0 0 auto;
+    margin: 0 0 0 auto;
+}
+
+/* Belum memberikan star */
+.skill-star-button {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    min-height: 40px;
+    padding: 6px 8px 6px 11px;
+
+    border: 1px solid #c8d9e9;
+    border-radius: 12px;
+    background: #edf4fa;
+    color: var(--accent-dark);
+
+    font: inherit;
+    font-size: 0.8rem;
     font-weight: 700;
     line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+
+    box-shadow: 0 2px 4px rgba(30, 48, 71, 0.04);
+
+    transition:
+        background-color 180ms ease,
+        border-color 180ms ease,
+        box-shadow 180ms ease,
+        transform 180ms ease;
 }
 
-.star-icon-skill {
+.skill-star-icon {
+    width: 19px;
+    height: 19px;
+    flex: 0 0 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+
+    transition:
+        transform 220ms ease,
+        fill 180ms ease,
+        color 180ms ease;
+}
+
+.skill-star-total {
     display: grid;
     place-items: center;
-    width: 31px;
-    height: 31px;
-    flex: 0 0 31px;
-    border-radius: 50%;
-    background: var(--paper);
-    color: var(--accent-dark);
-    font-size: 1.25rem;
-    line-height: 1;
-    transition: transform 0.2s ease;
+    min-width: 25px;
+    min-height: 25px;
+    padding: 0 6px;
+
+    border-radius: 7px;
+    background: rgba(51, 104, 160, 0.1);
+    color: inherit;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
 }
 
-.skill-actions .button.button-star-skill:hover {
-    opacity: 1;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 12px rgba(30, 48, 71, 0.22);
+/* Sudah memberikan star */
+.skill-star-button.is-starred {
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
+    color: white;
+    box-shadow: 0 3px 8px rgba(39, 82, 128, 0.18);
 }
 
-.button-star-skill:hover .star-icon-skill {
-    transform: rotate(-15deg) scale(1.08);
+.skill-star-button.is-starred .skill-star-icon {
+    color: #ffd477;
+    fill: currentColor;
 }
 
-.skill-actions .button.button-star-skill:active {
-    transform: translateY(0);
+.skill-star-button.is-starred .skill-star-total {
+    background: rgba(255, 255, 255, 0.16);
 }
 
-.skill-actions .button.button-star-skill:focus-visible {
+/* Hover pada perangkat yang memiliki pointer */
+@media (hover: hover) {
+    .skill-star-button:hover {
+        background: #e1edf7;
+        border-color: var(--accent);
+        box-shadow: 0 5px 12px rgba(39, 82, 128, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .skill-star-button.is-starred:hover {
+        background: var(--accent);
+    }
+
+    .skill-star-button:hover .skill-star-icon {
+        transform: rotate(-12deg) scale(1.12);
+    }
+}
+
+/* Efek saat ditekan dan navigasi keyboard */
+.skill-star-button:active {
+    transform: scale(0.96);
+    box-shadow: none;
+}
+
+.skill-star-button:focus-visible {
     outline: 3px solid var(--accent);
     outline-offset: 3px;
 }
 
-.skill-actions .button.button-star-skill.is-starred {
-    background: var(--accent);
-    border-color: var(--accent);
-}
-
+/* Mengikuti preferensi pengurangan animasi */
 @media (prefers-reduced-motion: reduce) {
-    .skill-actions .button.button-star-skill,
-    .star-icon-skill {
+    .skill-star-button,
+    .skill-star-icon {
         transition: none;
     }
 
-    .skill-actions .button.button-star-skill:hover,
-    .button-star-skill:hover .star-icon-skill {
+    .skill-star-button:hover,
+    .skill-star-button:active,
+    .skill-star-button:hover .skill-star-icon {
         transform: none;
     }
 }
