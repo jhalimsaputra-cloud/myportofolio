@@ -59,9 +59,11 @@
                         <!-- Content -->
                         <div class="skill-card-body">
 
-                            <h4>
-                                {{ skill.name }}
-                            </h4>
+                            <div class="skill-card-heading">
+                                <h4>{{ skill.name }}</h4>
+
+                                {% include "components/skill_star.html" %}
+                            </div>
 
                             <p>
                                 {{ skill.description }}
@@ -70,9 +72,6 @@
 
                             <!-- CRUD -->
                             <div class="skill-actions">
-                                <!-- Star -->
-                                {% include "components/skill_star.html" %}
-
                                 <!-- Update -->
                                  {% if perms.main.change_skill %}
                                 <a
@@ -132,9 +131,12 @@
                         <!-- Content -->
                         <div class="skill-card-body">
 
-                            <h4>
-                                {{ skill.name }}
-                            </h4>
+                
+                            <div class="skill-card-heading">
+                                <h4>{{ skill.name }}</h4>
+
+                                {% include "components/skill_star.html" %}
+                            </div>
 
                             <p>
                                 {{ skill.description }}
