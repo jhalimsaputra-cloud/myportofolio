@@ -1297,3 +1297,17 @@ h1, .brand {
         transform: none;
     }
 }
+.skill-card {
+    align-items: stretch;
+}
+
+.skill-card-body {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+}
+
+.skill-card-body .skill-actions {
+    margin-top: auto;
+    padding-top: 1rem;
+}
