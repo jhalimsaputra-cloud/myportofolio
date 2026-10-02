@@ -47,6 +47,10 @@
     </div>
 </main>
 
+{% if user.is_superuser %}
+    {% include "components/skill_form_modal.html" %}
+{% endif %}
+
 <script>
 (() => {
     // Konfigurasi
@@ -405,8 +409,16 @@
         }
     }
 
+    function closeSkillModal() {
+        const modal = document.getElementById("add-skill-modal");
+
+        if (modal && modal.matches(":popover-open")) {
+            modal.hidePopover();
+        }
+    }
+
     function searchSkills() {
-    fetchSkills(searchInput.value.trim());
+        fetchSkills(searchInput.value.trim());
     }
 
     // Cari otomatis setelah pengguna berhenti mengetik selama 300 ms
