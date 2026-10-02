@@ -143,6 +143,32 @@ def show_skills(request):
 
     return render(request, "skill.html", context)
 
+@require_POST
+def create_skill_ajax(request):
+    if not request.user.is_superuser:
+        return JsonResponse(
+            {"message": "Hanya pemilik portofolio yang dapat menambahkan skill."},
+            status=403,
+        )
+
+    form = SkillForm(request.POST)
+
+    if form.is_valid():
+        skill = form.save()
+
+        return JsonResponse(
+            {
+                "message": "Skill berhasil ditambahkan!",
+                "pk": str(skill.id),
+            },
+            status=201,
+        )
+
+    return JsonResponse(
+        {"errors": form.errors.get_json_data()},
+        status=400,
+    )
+
 @login_required(login_url="/login/")
 def create_project(request):
 

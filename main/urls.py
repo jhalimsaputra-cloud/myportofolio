@@ -1,6 +1,6 @@
 from django.urls import path
 
-from main.views import show_main, show_test, show_experience, show_education, show_skills, create_project, show_projects, get_projects_json, delete_project, create_skill, update_skill, delete_skill, get_skills_json, register, login_user, logout_user, toggle_star_project, toggle_star_skill, create_project_ajax
+from main.views import show_main, show_test, show_experience, show_education, show_skills, create_project, show_projects, get_projects_json, delete_project, create_skill, update_skill, delete_skill, get_skills_json, register, login_user, logout_user, toggle_star_project, toggle_star_skill, create_project_ajax, create_skill_ajax
 
 app_name = "main"
 
@@ -16,6 +16,7 @@ urlpatterns = [
     path("skills/<uuid:skill_id>/delete/", delete_skill, name="delete_skill"),
     path("api/skills/", get_skills_json, name="get_skills_json"),
     path("skills/<uuid:skill_id>/star/",toggle_star_skill,name="toggle_star_skill",),
+    path("skills/add-ajax/",create_skill_ajax,name="create_skill_ajax",),
     # Projects
     path("projects/", show_projects, name="show_projects"),
     path("projects/add/", create_project, name="create_project"),

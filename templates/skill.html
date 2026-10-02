@@ -417,6 +417,79 @@
         }
     }
 
+    const CREATE_SKILL_ENDPOINT = "{% url 'main:create_skill_ajax' %}";
+    const skillForm = document.getElementById("skill-form");
+
+    // Mengirim form Add Skill tanpa reload
+    async function addSkill(event) {
+        event.preventDefault();
+
+        const submitButton = skillForm.querySelector(
+            'button[type="submit"]'
+        );
+
+        submitButton.disabled = true;
+
+        try {
+            const response = await fetch(CREATE_SKILL_ENDPOINT, {
+                method: "POST",
+                body: new FormData(skillForm),
+                headers: {
+                    "Accept": "application/json"
+                }
+            });
+
+            const result = await response.json().catch(() => ({}));
+
+            if (response.ok) {
+                skillForm.reset();
+                closeSkillModal();
+
+                showToast(
+                    "Berhasil!",
+                    result.message || "Skill berhasil ditambahkan!",
+                    "success"
+                );
+
+                // Memuat ulang daftar skill melalui AJAX
+                fetchSkills(searchInput.value.trim());
+
+            } else {
+                const errorMessages = result.errors
+                    ? Object.values(result.errors)
+                        .flat()
+                        .map(error => error.message)
+                    : [
+                        result.message ||
+                        `Terjadi kesalahan (status ${response.status}).`
+                    ];
+
+                showToast(
+                    "Gagal menambahkan skill",
+                    errorMessages.join(" "),
+                    "error"
+                );
+            }
+
+        } catch (error) {
+            console.error("Error adding skill:", error);
+
+            showToast(
+                "Gagal menambahkan skill",
+                "Tidak dapat terhubung ke server. Silakan coba lagi.",
+                "error"
+            );
+
+        } finally {
+            submitButton.disabled = false;
+        }
+    }
+
+    // Form hanya tersedia untuk superuser
+    if (skillForm) {
+        skillForm.addEventListener("submit", addSkill);
+    }
+
     function searchSkills() {
         fetchSkills(searchInput.value.trim());
     }
