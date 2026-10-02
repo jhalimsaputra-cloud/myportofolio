@@ -108,3 +108,32 @@ class SkillForm(ModelForm):
                 }
             ),
         }
+    def clean_name(self):
+        name = strip_tags(self.cleaned_data["name"]).strip()
+
+        if not name:
+            raise ValidationError(
+                "Nama skill tidak boleh hanya berisi tag HTML."
+            )
+
+        return name
+
+    def clean_description(self):
+        description = strip_tags(
+            self.cleaned_data["description"]
+        ).strip()
+
+        return description
+
+    def clean_image_filename(self):
+        image_filename = strip_tags(
+            self.cleaned_data["image_filename"]
+        ).strip()
+
+        if not image_filename:
+            raise ValidationError(
+                "Nama file gambar tidak boleh hanya berisi tag HTML."
+            )
+
+        return image_filename
+
