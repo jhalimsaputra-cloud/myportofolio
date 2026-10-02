@@ -137,7 +137,8 @@ def show_skills(request):
 
     context = {
         "name" : "Justin Evan Halim Saputra",
-        "name_query" : name_query
+        "name_query" : name_query,
+        "form": SkillForm(),
     }
 
     return render(request, "skill.html", context)

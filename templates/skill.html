@@ -48,8 +48,8 @@
     const BASE_SKILLS_ENDPOINT = "{% url 'main:get_skills_json' %}";
     const STATIC_IMAGE_BASE = "{% static 'img/' %}";
 
-    const IS_SUPERUSER = "{{ user.is_superuser|yesno:'true,false' }}";
-    const CAN_CHANGE_SKILL = "{{ perms.main.change_skill|yesno:'true,false' }}";
+    const IS_SUPERUSER = "{{ user.is_superuser|yesno:'true,false' }}" === "true";
+    const CAN_CHANGE_SKILL = "{{ perms.main.change_skill|yesno:'true,false' }}" === "true";
 
     const DUMMY_UUID = "00000000-0000-0000-0000-000000000000";
 
@@ -79,6 +79,9 @@
 
     const searchForm = document.getElementById("skill-search-form");
     const searchInput = document.getElementById("search-input");
+
+    const SEARCH_DEBOUNCE_DELAY = 300;
+    let searchDebounceTimer;
 
     // Mengatur bagian halaman yang ditampilkan
     function displayPageSection({
@@ -397,10 +400,24 @@
         }
     }
 
-    // Pencarian tanpa reload halaman
+    function searchSkills() {
+    fetchSkills(searchInput.value.trim());
+    }
+
+    // Cari otomatis setelah pengguna berhenti mengetik selama 300 ms
+    searchInput.addEventListener("input", function() {
+        clearTimeout(searchDebounceTimer);
+
+        searchDebounceTimer = setTimeout(function() {
+            searchSkills();
+        }, SEARCH_DEBOUNCE_DELAY);
+    });
+
+    // Tombol Cari atau Enter menjalankan pencarian langsung
     searchForm.addEventListener("submit", function(event) {
         event.preventDefault();
-        fetchSkills(searchInput.value.trim());
+        clearTimeout(searchDebounceTimer);
+        searchSkills();
     });
 
     // Memuat data saat halaman dibuka
