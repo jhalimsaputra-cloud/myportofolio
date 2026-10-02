@@ -41,4 +41,370 @@
         </section>
     </div>
 </main>
+
+    <script>
+(() => {
+    // Konfigurasi
+    const BASE_SKILLS_ENDPOINT = "{% url 'main:get_skills_json' %}";
+    const STATIC_IMAGE_BASE = "{% static 'img/' %}";
+
+    const IS_SUPERUSER = "{{ user.is_superuser|yesno:'true,false' }}";
+    const CAN_CHANGE_SKILL = "{{ perms.main.change_skill|yesno:'true,false' }}";
+
+    const DUMMY_UUID = "00000000-0000-0000-0000-000000000000";
+
+    const UPDATE_URL =
+        "{% url 'main:update_skill' '00000000-0000-0000-0000-000000000000' %}";
+
+    const DELETE_URL =
+        "{% url 'main:delete_skill' '00000000-0000-0000-0000-000000000000' %}";
+
+    const STAR_URL =
+        "{% url 'main:toggle_star_skill' '00000000-0000-0000-0000-000000000000' %}";
+
+    const CSRF_INPUT = `{% csrf_token %}`;
+
+    let skillsAbortController;
+
+    // Elemen DOM
+    const loadingState = document.getElementById("loading");
+    const errorState = document.getElementById("error");
+    const emptyState = document.getElementById("empty");
+
+    const softwareSection = document.getElementById("software-section");
+    const systemsSection = document.getElementById("systems-section");
+
+    const softwareGrid = document.getElementById("software-grid");
+    const systemsGrid = document.getElementById("systems-grid");
+
+    const searchForm = document.getElementById("skill-search-form");
+    const searchInput = document.getElementById("search-input");
+
+    // Mengatur bagian halaman yang ditampilkan
+    function displayPageSection({
+        showLoading = false,
+        showError = false,
+        showEmpty = false,
+        showGrid = false
+    } = {}) {
+        loadingState.classList.toggle("hide", !showLoading);
+        errorState.classList.toggle("hide", !showError);
+        emptyState.classList.toggle("hide", !showEmpty);
+
+        softwareSection.classList.toggle("hide", !showGrid);
+        systemsSection.classList.toggle("hide", !showGrid);
+    }
+
+    // Mengamankan teks JSON sebelum dimasukkan ke innerHTML
+    function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, character => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[character]);
+    }
+
+    // Menggunakan toast yang sudah dimuat melalui base.html
+    function notifyError() {
+        showToast(
+            "Gagal memuat skills",
+            "Silakan coba lagi.",
+            "error"
+        );
+    }
+
+    // Membuat kartu skill
+    function buildSkillCardElement(item) {
+        const skill = item.fields;
+        const skillId = String(item.pk);
+
+        const name = escapeHtml(skill.name);
+        const description = escapeHtml(skill.description);
+
+        const modalId = escapeHtml("delete-skill-" + skillId);
+        const modalTitleId = escapeHtml("delete-skill-title-" + skillId);
+
+        const updateUrl = escapeHtml(
+            UPDATE_URL.replace(DUMMY_UUID, skillId)
+        );
+
+        const deleteUrl = escapeHtml(
+            DELETE_URL.replace(DUMMY_UUID, skillId)
+        );
+
+        const starUrl = escapeHtml(
+            STAR_URL.replace(DUMMY_UUID, skillId)
+        );
+
+        const starCount = escapeHtml(skill.star_count ?? 0);
+
+        const starTitle = escapeHtml(
+            (skill.is_starred ? "Batalkan star" : "Beri star") +
+            " — " + (skill.star_count ?? 0) + " star" +
+            (skill.starred_by_names
+                ? " — " + skill.starred_by_names
+                : "")
+        );
+
+        // Logo
+        const imageHtml = skill.image_filename
+            ? `
+                <div class="skill-card-icon">
+                    <img
+                        src="${escapeHtml(STATIC_IMAGE_BASE + skill.image_filename)}"
+                        alt="${name} logo">
+                </div>
+            `
+            : "";
+
+        // Tombol star
+        const starHtml = `
+            <form
+                method="post"
+                action="${starUrl}"
+                class="skill-star-form">
+
+                ${CSRF_INPUT}
+
+                <button
+                    type="submit"
+                    class="skill-star-button${skill.is_starred ? " is-starred" : ""}"
+                    aria-pressed="${skill.is_starred ? "true" : "false"}"
+                    aria-label="Star untuk ${name}"
+                    title="${starTitle}">
+
+                    <svg
+                        class="skill-star-icon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        focusable="false">
+
+                        <path d="m12 3 2.78 5.63 6.22.91-4.5 4.38
+                                 1.06 6.19L12 17.19l-5.56 2.92
+                                 1.06-6.19L3 9.54l6.22-.91L12 3Z"/>
+                    </svg>
+
+                    <span class="skill-star-label">
+                        ${skill.is_starred ? "Starred" : "Star"}
+                    </span>
+
+                    <span class="skill-star-total">
+                        ${starCount}
+                    </span>
+                </button>
+            </form>
+        `;
+
+        // Tombol Update
+        const updateHtml = CAN_CHANGE_SKILL
+            ? `
+                <a href="${updateUrl}" class="button">
+                    Update
+                </a>
+            `
+            : "";
+
+        // Tombol dan modal Delete
+        const deleteHtml = IS_SUPERUSER
+            ? `
+                <button
+                    type="button"
+                    class="button button-danger"
+                    popovertarget="${modalId}"
+                    aria-label="Hapus ${name}"
+                    title="Hapus Skill">
+                    Delete
+                </button>
+
+                <div
+                    id="${modalId}"
+                    class="project-delete-modal"
+                    popover="auto"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="${modalTitleId}">
+
+                    <button
+                        type="button"
+                        class="project-delete-modal__backdrop"
+                        popovertarget="${modalId}"
+                        popovertargetaction="hide"
+                        aria-label="Tutup konfirmasi hapus">
+                    </button>
+
+                    <div class="project-delete-modal__content">
+                        <button
+                            type="button"
+                            class="project-delete-modal__close"
+                            popovertarget="${modalId}"
+                            popovertargetaction="hide"
+                            aria-label="Tutup konfirmasi hapus">
+                            ×
+                        </button>
+
+                        <h2 id="${modalTitleId}">
+                            Hapus Skill?
+                        </h2>
+
+                        <p>
+                            Apakah Anda yakin ingin menghapus
+                            <strong>${name}</strong>?
+                        </p>
+
+                        <div class="project-delete-modal__actions">
+                            <button
+                                type="button"
+                                class="button button-secondary"
+                                popovertarget="${modalId}"
+                                popovertargetaction="hide">
+                                Batal
+                            </button>
+
+                            <form method="post" action="${deleteUrl}">
+                                ${CSRF_INPUT}
+
+                                <button
+                                    type="submit"
+                                    class="button button-danger">
+                                    Ya, Hapus
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `
+            : "";
+
+        const article = document.createElement("article");
+        article.className = "skill-card";
+
+        article.innerHTML = `
+            ${imageHtml}
+
+            <div class="skill-card-body">
+                <div class="skill-card-heading">
+                    <h4>${name}</h4>
+                    ${starHtml}
+                </div>
+
+                <p>${description}</p>
+
+                <div class="skill-actions">
+                    ${updateHtml}
+                    ${deleteHtml}
+                </div>
+            </div>
+        `;
+
+        return article;
+    }
+
+    // Menampilkan skill pada grid kategorinya
+    function renderCategory(container, skills, emptyMessage) {
+        container.replaceChildren();
+
+        if (skills.length === 0) {
+            const message = document.createElement("p");
+            message.className = "empty-state";
+            message.textContent = emptyMessage;
+
+            container.appendChild(message);
+            return;
+        }
+
+        skills.forEach(item => {
+            container.appendChild(buildSkillCardElement(item));
+        });
+    }
+
+    // Mengambil data skill melalui AJAX
+    async function fetchSkills(searchQuery = "") {
+        if (skillsAbortController) {
+            skillsAbortController.abort();
+        }
+
+        const controller = new AbortController();
+        skillsAbortController = controller;
+
+        displayPageSection({ showLoading: true });
+
+        try {
+            const url = new URL(
+                BASE_SKILLS_ENDPOINT,
+                window.location.origin
+            );
+
+            if (searchQuery) {
+                url.searchParams.set("name", searchQuery);
+            }
+
+            const response = await fetch(url, {
+                headers: {
+                    "Accept": "application/json"
+                },
+                signal: controller.signal
+            });
+
+            if (!response.ok) {
+                throw new Error("Gagal mengambil data skills");
+            }
+
+            const skills = await response.json();
+
+            if (controller.signal.aborted) return;
+
+            // Pisahkan data berdasarkan kategori
+            const softwareSkills = skills.filter(
+                item => item.fields.skill_type === "Software"
+            );
+
+            const systemsSkills = skills.filter(
+                item => item.fields.skill_type === "Systems"
+            );
+
+            renderCategory(
+                softwareGrid,
+                softwareSkills,
+                "Tidak ada skill Software Development yang ditemukan."
+            );
+
+            renderCategory(
+                systemsGrid,
+                systemsSkills,
+                "Tidak ada skill Systems & Architecture yang ditemukan."
+            );
+
+            if (skills.length === 0) {
+                displayPageSection({ showEmpty: true });
+            } else {
+                displayPageSection({ showGrid: true });
+            }
+
+        } catch (error) {
+            if (
+                error.name === "AbortError" ||
+                controller.signal.aborted
+            ) {
+                return;
+            }
+
+            console.error("Error loading skills:", error);
+
+            displayPageSection({ showError: true });
+            notifyError();
+        }
+    }
+
+    // Pencarian tanpa reload halaman
+    searchForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+        fetchSkills(searchInput.value.trim());
+    });
+
+    // Memuat data saat halaman dibuka
+    fetchSkills(searchInput.value.trim());
+})();
+</script>
 {% endblock content %}
