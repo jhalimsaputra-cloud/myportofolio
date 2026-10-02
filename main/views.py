@@ -102,53 +102,42 @@ def update_skill(request, skill_id):
 
 def get_skills_json(request):
     name_query = request.GET.get("name", "").strip()
-
-    skills = Skill.objects.all()
+    skills = Skill.objects.prefetch_related("starred_by").all()
 
     if name_query:
         skills = skills.filter(name__icontains=name_query)
 
-    skills_json = serializers.serialize("json", skills, use_natural_foreign_keys=True)
+    data = []
+    for skill in skills:
+        starred_users = skill.starred_by.all()
+        is_starred = request.user in starred_users if request.user.is_authenticated else False
+        starred_by_names = ",".join([u.username for u in starred_users])
 
-    return HttpResponse(
-        skills_json,
-        content_type="application/json"
-    )
+        data.append({
+            "pk" : str(skill.id),
+            "fields" : {
+                "name": skill.name,
+                "skill_type": skill.skill_type,
+                "description" : skill.description,
+                "image_filename" : skill.image_filename,
+                "star_count": starred_users.count(),
+                "is_starred": is_starred,
+                "starred_by_names": starred_by_names,
+            }
+        })
+    return JsonResponse(data, safe = False)
+    
+    
 
 
 def show_skills(request):
     list(get_messages(request))
-    json_response = get_skills_json(request)
-
-    skills = serializers.deserialize(
-        "json",
-        json_response.content.decode("utf-8"),
-    )
-
-    skills = [
-        skill.object
-        for skill in skills
-    ]
-
-    software_skills = [
-        skill
-        for skill in skills
-        if skill.skill_type == "Software"
-    ]
-
-    systems_skills = [
-        skill
-        for skill in skills
-        if skill.skill_type == "Systems"
-    ]
 
     name_query = request.GET.get("name", "").strip()
 
     context = {
-        "name": "Justin Evan Halim Saputra",
-        "software_skills": software_skills,
-        "systems_skills": systems_skills,
-        "name_query": name_query,
+        "name" : "Justin Evan Halim Saputra",
+        "name_query" : name_query
     }
 
     return render(request, "skill.html", context)

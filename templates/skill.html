@@ -8,176 +8,36 @@
 {% block content %}
 <main>
     <div class="container">
-
         <section class="skills-section">
-
-            <!-- =========================
-                 Header
-            ========================== -->
             <div class="section-heading skill-header">
-
                 <div>
                     <p class="eyebrow">WHAT I WORK WITH</p>
                     <h2>My Skills</h2>
                 </div>
-
                 {% if user.is_superuser %}
-                    <a href="{% url 'main:create_skill' %}"
-                    class="button">
-                        Add Skill
-                    </a>
+                    <a href="{% url 'main:create_skill' %}" class="button">Add Skill</a>
                 {% endif %}
-
             </div>
 
+            <form id="skill-search-form" class="project-search">
+                <input type="search" id="search-input" name="name"
+                       value="{{ name_query }}" placeholder="Cari berdasarkan nama skill"
+                       class="project-search__input" aria-label="Cari berdasarkan nama skill">
+                <button type="submit" class="button">Cari</button>
+            </form>
 
-            <!-- =========================
-                 Software Development
-            ========================== -->
-            <div class="skill-type-block">
+            <p id="loading" class="empty-state hide" role="status">Memuat skills...</p>
+            <p id="error" class="empty-state hide" role="alert">Gagal memuat skills. Silakan coba lagi.</p>
+            <p id="empty" class="empty-state hide" role="status">Belum ada skill yang ditambahkan maupun ditemukan.</p>
 
-                <h3 class="skill-type-heading">
-                    Software Development
-                </h3>
-
-                <div class="skills-grid">
-
-                    {% for skill in software_skills %}
-
-                    <article class="skill-card">
-
-                        <!-- Logo -->
-                        <div class="skill-card-icon">
-
-                            <img
-                                src="{% static 'img/' %}{{ skill.image_filename }}"
-                                alt="{{ skill.name }} logo">
-
-                        </div>
-
-
-                        <!-- Content -->
-                        <div class="skill-card-body">
-
-                            <div class="skill-card-heading">
-                                <h4>{{ skill.name }}</h4>
-
-                                {% include "components/skill_star.html" %}
-                            </div>
-
-                            <p>
-                                {{ skill.description }}
-                            </p>
-
-
-                            <!-- CRUD -->
-                            <div class="skill-actions">
-                                <!-- Update -->
-                                 {% if perms.main.change_skill %}
-                                <a
-                                    href="{% url 'main:update_skill' skill.id %}"
-                                    class="button">
-                                    Update
-                                </a>
-                                {% endif %}
-
-                                <!-- Delete -->
-                                 {% if user.is_superuser %}{% include "components/skill_delete_modal.html" %}{% endif %}
-
-                            </div>
-
-                        </div>
-
-                    </article>
-
-                    {% empty %}
-
-                    <p class="empty-state">
-                        Belum ada skill Software Development yang ditambahkan.
-                    </p>
-
-                    {% endfor %}
-
-                </div>
-
+            <div id="software-section" class="skill-type-block hide">
+                <h3 class="skill-type-heading">Software Development</h3>
+                <div id="software-grid" class="skills-grid"></div>
             </div>
-
-
-            <!-- =========================
-                 Systems & Architecture
-            ========================== -->
-            <div class="skill-type-block">
-
-                <h3 class="skill-type-heading">
-                    Systems &amp; Architecture
-                </h3>
-
-                <div class="skills-grid">
-
-                    {% for skill in systems_skills %}
-
-                    <article class="skill-card">
-
-                        <!-- Logo -->
-                        <div class="skill-card-icon">
-
-                            <img
-                                src="{% static 'img/' %}{{ skill.image_filename }}"
-                                alt="{{ skill.name }} logo">
-
-                        </div>
-
-
-                        <!-- Content -->
-                        <div class="skill-card-body">
-
-                
-                            <div class="skill-card-heading">
-                                <h4>{{ skill.name }}</h4>
-
-                                {% include "components/skill_star.html" %}
-                            </div>
-
-                            <p>
-                                {{ skill.description }}
-                            </p>
-
-
-                            <!-- CRUD -->
-                            <div class="skill-actions">
-
-                                <!-- Update -->
-                                 {% if perms.main.change_skill %}
-                                <a
-                                    href="{% url 'main:update_skill' skill.id %}"
-                                    class="button">
-                                    Update
-                                </a>
-                                {% endif %}
-
-                                <!-- Delete -->
-                                 {% if user.is_superuser %}{% include "components/skill_delete_modal.html" %}{% endif %}
-
-                            </div>
-
-                        </div>
-
-                    </article>
-
-                    {% empty %}
-
-                    <p class="empty-state">
-                        Belum ada skill Systems &amp; Architecture yang ditambahkan.
-                    </p>
-
-                    {% endfor %}
-
-                </div>
-
+            <div id="systems-section" class="skill-type-block hide">
+                <h3 class="skill-type-heading">Systems &amp; Architecture</h3>
+                <div id="systems-grid" class="skills-grid"></div>
             </div>
-
         </section>
-
     </div>
 </main>
-{% endblock content %}
