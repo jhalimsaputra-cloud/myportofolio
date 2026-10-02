@@ -1,0 +1,75 @@
+<div
+    id="add-skill-modal"
+    class="project-delete-modal"
+    popover="auto"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="add-skill-modal-title">
+
+    <!-- Backdrop untuk menutup modal -->
+    <button
+        type="button"
+        class="project-delete-modal__backdrop"
+        popovertarget="add-skill-modal"
+        popovertargetaction="hide"
+        aria-label="Tutup form tambah skill">
+    </button>
+
+    <div class="project-delete-modal__content">
+
+        <!-- Tombol tutup -->
+        <button
+            type="button"
+            class="project-delete-modal__close"
+            popovertarget="add-skill-modal"
+            popovertargetaction="hide"
+            aria-label="Tutup form tambah skill">
+            ×
+        </button>
+
+        <h2 id="add-skill-modal-title">
+            Tambah Skill Baru
+        </h2>
+
+        <form
+            id="skill-form"
+            method="post"
+            action="{% url 'main:create_skill' %}"
+            class="skill-form">
+
+            {% csrf_token %}
+
+            {{ form.non_field_errors }}
+
+            {% for field in form %}
+                <div class="form-group">
+                    {{ field.label_tag }}
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <small>{{ field.help_text }}</small>
+                    {% endif %}
+
+                    {% for error in field.errors %}
+                        <p class="form-error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+            <div class="project-delete-modal__actions">
+                <button
+                    type="button"
+                    class="button button-secondary"
+                    popovertarget="add-skill-modal"
+                    popovertargetaction="hide">
+                    Batal
+                </button>
+
+                <button type="submit" class="button">
+                    Tambah Skill
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>

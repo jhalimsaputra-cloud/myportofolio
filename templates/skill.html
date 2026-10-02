@@ -15,7 +15,12 @@
                     <h2>My Skills</h2>
                 </div>
                 {% if user.is_superuser %}
-                    <a href="{% url 'main:create_skill' %}" class="button">Add Skill</a>
+                    <button
+                        type="button"
+                        class="button"
+                        popovertarget="add-skill-modal">
+                        + Add Skill
+                    </button>
                 {% endif %}
             </div>
 
