@@ -207,5 +207,8 @@ Dalam pengerjaan tugas ini, saya menggunakan bantuan generative AI, yakni Gemini
 * Output AI: Kode awal menyediakan tombol star dan tombol hapus dengan konfirmasi confirm().
 * Perbaikan: Saya menambahkan tombol Update sesuai permission pengguna dan mengganti konfirmasi hapus dengan modal. Tombol Delete tetap khusus untuk superuser. Tampilan star juga saya sesuaikan agar menunjukkan status, jumlah star, dan pengguna yang memberi star.
 
+Berikut adalah link log saya dengan Gemini:
+* https://share.gemini.google/sz1nL3GX9Vi8
+
 
 
