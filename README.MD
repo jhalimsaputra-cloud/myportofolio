@@ -161,5 +161,51 @@ Dalam pengerjaan tugas ini, saya memutuskan untuk mengimplementasikan access per
 Berikut adalah link log saya dengan Gemini:
 * https://share.gemini.google/OBextQA5HM9A
 
+## Jawaban Pertanyaan Reflektif & AI Disclosure Tugas Individual 5 +++
+1. Apa itu debouncing dan kenapa penting untuk pencarian AJAX?
+Debouncing adalah cara memberi jeda sebelum menjalankan suatu proses. Pada fitur pencarian saya, pencarian baru dijalankan setelah pengguna berhenti mengetik selama 300 milidetik. Kalau pengguna mengetik lagi sebelum jedanya selesai, waktu tunggunya dimulai ulang. Dengan begitu, aplikasi tidak akan mengirim request untuk setiap huruf yang diketik. Ini membantu mengurangi request ke server dan menghindari pencarian untuk kata yang belum selesai ditulis.
+
+2. Apa fungsi await saat menggunakan fetch() dan apa yang terjadi kalau tidak dipakai?
+await digunakan untuk menunggu hasil dari Promise sebelum melanjutkan baris berikutnya dalam fungsi async. Saat saya menulis const response = await fetch(url), kode menunggu sampai respons tersedia tanpa membuat seluruh halaman berhenti bekerja. Setelah itu, saya menggunakan await response.json() untuk menunggu isi respons selesai dibaca sebagai data JSON. Kalau await dihapus tanpa menggantinya dengan penanganan seperti .then(), variabel response masih berisi Promise. Akibatnya, kode yang langsung memanggil response.json() akan error karena responsnya belum didapatkan.
+
+3. Apa itu XSS dan kenapa data yang ditampilkan melalui AJAX/JavaScript lebih rentan dibandingkan template Django?
+XSS atau Cross-Site Scripting adalah serangan ketika penyerang menyisipkan kode berbahaya yang kemudian dijalankan di browser pengguna. Risiko ini muncul kalau data dari pengguna dimasukkan langsung ke innerHTML karena browser bisa membacanya sebagai HTML. Sementara itu, template Django secara default melakukan escaping pada nilai variabel sehingga karakter HTML ditampilkan sebagai teks. Jadi, AJAX sendiri bukan penyebab XSS, yang menentukan adalah cara datanya ditampilkan. Pada kode saya, saya menggunakan escapeHtml() sebelum memasukkan data ke HTML, textContent untuk pesan teks, dan strip_tags() pada form di server sebagai perlindungan tambahan.
+
+AI Disclosure
+
+Dalam pengerjaan tugas ini, saya menggunakan bantuan generative AI, yakni Gemini, untuk membuat kode awal fitur AJAX di halaman Skills. Kode tersebut mencakup pengambilan data, pencarian, modal tambah skill, dan pengiriman form. Namun, beberapa bagian masih berupa contoh umum dan belum sesuai dengan aplikasi saya, sehingga saya menyesuaikannya sebagai berikut:
+
+1. Nama Field dan URL Belum Sesuai
+* Output AI: Kode awal menggunakan field title, proficiency_level, dan image_url. Nama URL yang digunakan juga berbeda dengan yang ada di aplikasi saya.
+* Perbaikan: Saya menggantinya dengan field yang sesuai, yaitu name, skill_type, description, dan image_filename. Saya juga menyesuaikan nama URL menjadi toggle_star_skill dan create_skill_ajax.
+
+2. Semua Skill Ditampilkan dalam Satu Grid
+* Output AI: Semua skill ditampilkan dalam satu daftar tanpa dibedakan berdasarkan kategori.
+* Perbaikan: Saya memisahkan skill menjadi dua bagian, yaitu Software Development dan Systems & Architecture, berdasarkan nilai skill_type. Saya juga menambahkan pesan ketika salah satu kategori tidak memiliki data.
+
+3. Gambar dan Kartu Skill Belum Sesuai dengan Tampilan Saya
+* Output AI: Kode awal menggunakan image_url untuk gambar dan struktur kartu yang masih umum.
+* Perbaikan: Karena aplikasi saya menyimpan nama file gambar di image_filename, saya menggabungkannya dengan lokasi gambar statis. Struktur kartunya juga saya sesuaikan agar logo, nama, deskripsi, dan tombol mengikuti tampilan halaman Skills.
+
+4. Pencarian Hanya Berjalan Setelah Tombol Cari Ditekan
+* Output AI: Pencarian dijalankan saat form dikirim dan masih menggunakan parameter title.
+* Perbaikan: Saya mengganti parameter menjadi name dan menambahkan debounce selama 300 milidetik. Dengan begitu, pencarian berjalan otomatis setelah pengguna berhenti mengetik. Tombol Cari dan Enter tetap bisa digunakan untuk mencari langsung.
+
+5. Penanganan Pengambilan Data Perlu Dilengkapi
+* Output AI: Kode awal sudah membatalkan permintaan sebelumnya menggunakan AbortController, tetapi belum memeriksa kembali apakah permintaan dibatalkan setelah JSON diterima.
+* Perbaikan: Saya menambahkan pemeriksaan sebelum data ditampilkan. Jika pengambilan data gagal, halaman juga menampilkan pesan error dan toast agar pengguna mengetahui masalahnya.
+
+6. Respons Server dan Pengiriman CSRF Perlu Disesuaikan
+* Output AI: View awal mengembalikan form.errors, sedangkan JavaScript mengambil token CSRF dari cookie.
+* Perbaikan: Saya menggunakan form.errors.get_json_data() agar pesan validasi lebih mudah dibaca oleh JavaScript. Token CSRF dikirim bersama FormData dari field {% csrf_token %}. Pemeriksaan superuser di view serta status respons 201, 400, dan 403 tetap saya gunakan.
+
+7. Data dari JSON Belum Di-escape
+* Output AI: Nama, deskripsi, dan data lain langsung dimasukkan ke innerHTML.
+* Perbaikan: Saya menambahkan escapeHtml() agar karakter HTML pada data ditampilkan sebagai teks. Pada sisi server, saya juga menggunakan strip_tags() dalam metode pembersihan field di SkillForm.
+
+8. Tombol Pengelolaan Skill Perlu Disesuaikan
+* Output AI: Kode awal menyediakan tombol star dan tombol hapus dengan konfirmasi confirm().
+* Perbaikan: Saya menambahkan tombol Update sesuai permission pengguna dan mengganti konfirmasi hapus dengan modal. Tombol Delete tetap khusus untuk superuser. Tampilan star juga saya sesuaikan agar menunjukkan status, jumlah star, dan pengguna yang memberi star.
+
 
 
