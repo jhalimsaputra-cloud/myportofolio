@@ -54,7 +54,7 @@
 <script>
 (() => {
     // Konfigurasi
-    const BASE_SKILLS_ENDPOINT = "{% url 'main:get_skills_json' %}";
+    const BASE_SKILLS_ENDPOINT = "{% url 'api:skill-list' %}";
     const STATIC_IMAGE_BASE = "{% static 'img/' %}";
 
     const IS_SUPERUSER = "{{ user.is_superuser|yesno:'true,false' }}" === "true";
@@ -128,9 +128,8 @@
     }
 
     // Membuat kartu skill
-    function buildSkillCardElement(item) {
-        const skill = item.fields;
-        const skillId = String(item.pk);
+    function buildSkillCardElement(skill) {
+        const skillId = String(skill.id);
 
         const name = escapeHtml(skill.name);
         const description = escapeHtml(skill.description);
@@ -369,11 +368,11 @@
 
             // Pisahkan data berdasarkan kategori
             const softwareSkills = skills.filter(
-                item => item.fields.skill_type === "Software"
+                item => item.skill_type === "Software"
             );
 
             const systemsSkills = skills.filter(
-                item => item.fields.skill_type === "Systems"
+                item => item.skill_type === "Systems"
             );
 
             renderCategory(

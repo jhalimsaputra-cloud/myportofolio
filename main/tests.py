@@ -67,7 +67,7 @@ class SkillViewTest(TestCase):
         )
 
     def get_skills(self, **params):
-        response = self.client.get(reverse("main:get_skills_json"), params)
+        response = self.client.get(reverse("api:skill-list"), params)
         self.assertEqual(response.status_code, 200)
         return response.json()
 
@@ -78,15 +78,16 @@ class SkillViewTest(TestCase):
         self.assertTemplateUsed(response, "skill.html")
         self.assertContains(response, 'id="software-grid"')
         self.assertContains(response, 'id="systems-grid"')
-        self.assertContains(response, reverse("main:get_skills_json"))
+        self.assertContains(response, reverse("api:skill-list"))
+        self.assertNotContains(response, reverse("main:get_skills_json"))
 
     def test_skill_data_available_through_json(self):
         """Endpoint menyediakan identitas dan isi kartu untuk frontend."""
         skill = self.create_skill()
         data = self.get_skills()
         self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]["pk"], str(skill.id))
-        fields = data[0]["fields"]
+        self.assertEqual(data[0]["id"], str(skill.id))
+        fields = data[0]
         self.assertEqual(fields["name"], skill.name)
         self.assertEqual(fields["description"], skill.description)
         self.assertEqual(fields["image_filename"], skill.image_filename)
@@ -108,7 +109,7 @@ class SkillViewTest(TestCase):
         skill = self.create_skill(name="Java")
         data = self.get_skills()
         self.assertEqual(
-            [(item["pk"], item["fields"]["skill_type"]) for item in data],
+            [(item["id"], item["skill_type"]) for item in data],
             [(str(skill.id), "Software")],
         )
 
@@ -117,7 +118,7 @@ class SkillViewTest(TestCase):
         software = self.create_skill(name="Django")
         systems = self.create_skill(name="AVR Assembly", skill_type="Systems")
         categories = {
-            item["pk"]: item["fields"]["skill_type"]
+            item["id"]: item["skill_type"]
             for item in self.get_skills()
         }
         self.assertEqual(categories, {
@@ -129,5 +130,13 @@ class SkillViewTest(TestCase):
         skill = self.create_skill()
         self.create_skill(name="Java")
         data = self.get_skills(name="  PYTH  ")
-        self.assertEqual([item["pk"] for item in data], [str(skill.id)])
+        self.assertEqual([item["id"] for item in data], [str(skill.id)])
         self.assertEqual(self.get_skills(name="not-found"), [])
+
+    def test_legacy_json_endpoint_remains_available(self):
+        """Migrating the page must not break consumers of the previous endpoint."""
+        skill = self.create_skill()
+        response = self.client.get(reverse("main:get_skills_json"), {"name": "PYTH"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()[0]["pk"], str(skill.pk))
+        self.assertEqual(response.json()[0]["fields"]["name"], skill.name)
