@@ -10,13 +10,36 @@ Repositori ini berisi kode sumber (*source code*) untuk website portofolio priba
 * [PWS Deployment Link](https://justin-evan-myportofolio.pws.cs.ui.ac.id/)
 
 ## Setup & Cara Menjalankan Secara Lokal
-Untuk menjalankan proyek ini di komputer lokal Anda, ikuti langkah-langkah berikut:
+Proyek ini memakai Django, template Django, JavaScript `fetch()`, dan Django REST Framework (DRF). Halaman harus dijalankan melalui server Django agar URL, sesi, CSRF, dan database bekerja.
 
-1. Clone repositori ini ke perangkat lokal Anda:
-   ```bash
-   git clone [https://pws.cs.ui.id/justin.evan/myportofolio.git](https://pws.cs.ui.id/justin.evan/myportofolio.git)
-2. Buka folder proyek melalui teks editor pilihan Anda (misalnya VS Code).
-3. Jalankan file index.html menggunakan ekstensi Live Server di VS Code, atau buka langsung file tersebut menggunakan browser pilihan Anda.
+Lingkungan yang diperiksa pada 5 November 2026: Django **5.2.19** dan DRF **3.18.3** dalam `.venv`. Rentang dependensi ada di [requirements.txt](requirements.txt); dependensi belum dikunci seluruhnya dengan lockfile. Siapkan Python yang kompatibel dengan paket tersebut, Git, dan pip.
+
+Contoh PowerShell dari direktori tempat repositori akan disimpan:
+
+```powershell
+git clone https://github.com/jhalimsaputra-cloud/myportofolio.git
+cd myportofolio
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe manage.py showmigrations
+.\.venv\Scripts\python.exe manage.py migrate
+.\.venv\Scripts\python.exe manage.py createsuperuser
+.\.venv\Scripts\python.exe manage.py runserver
+```
+
+Buka [halaman lokal](http://127.0.0.1:8000/), [Skills](http://127.0.0.1:8000/skills/), atau [Projects](http://127.0.0.1:8000/projects/). Instalasi baru tidak otomatis berisi data; buat Skill melalui akun pemilik. `image_filename` memakai nama gambar dalam `static/img/`, misalnya `python.png`.
+
+`PRODUCTION` secara default bernilai `False` dan memakai SQLite lokal `db.sqlite3`. Pastikan konfigurasi menunjuk database yang dimaksud sebelum `migrate`; cadangkan database yang sudah berisi data penting. Gunakan migrasi yang tersedia: Tugas 6 tidak menambahkan perubahan model sehingga tidak memerlukan `makemigrations` baru. Jika `PRODUCTION=True`, konfigurasi menggunakan PostgreSQL dengan variabel `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, serta `SCHEMA` opsional. Jangan commit kredensial atau database.
+
+Cookie sesi dan CSRF saat ini tetap `Secure=True`. Login serta mutasi berhasil diperiksa pada `http://127.0.0.1:8000` di browser pengujian, tanpa perubahan konfigurasi. Hasil tersebut belum membuktikan perilaku semua browser atau host HTTP lain. Konfigurasi deployment produksi perlu ditinjau tersendiri; hasil pemeriksaan lokal bukan sertifikasi kesiapan produksi.
+
+Untuk menguji aplikasi:
+
+```powershell
+.\.venv\Scripts\python.exe manage.py test main
+```
+
+Gunakan label `main` agar skrip Selenium di luar aplikasi tidak ikut ditemukan bila tersedia. Django membuat database test tersendiri; data utama tidak digunakan sebagai fixture test otomatis. Ringkasan API dan hasil verifikasi Tugas 6 tersedia di bagian berikut setelah dokumentasi tugas sebelumnya.
 
 ## Jawaban Pertanyaan Reflektif & AI Disclosure Tugas Individual 1 +++
 
@@ -209,6 +232,138 @@ Dalam pengerjaan tugas ini, saya menggunakan bantuan generative AI, yakni Gemini
 
 Berikut adalah link log saya dengan Gemini:
 * https://share.gemini.google/sz1nL3GX9Vi8
+
+## Implementasi Individual Assignment 6
+
+Bagian mandiri yang dilanjutkan dari Tugas 3–5 adalah **Skill**, bukan Project. Model Skill, UUID, kategori, data, dan relasi `starred_by` yang sudah ada digunakan kembali. API dan halaman **Project** dari Tutorial 07 tetap tersedia dengan aturan akses tutorialnya sendiri.
+
+### Perubahan wajib dan struktur kode
+
+- [main/serializers.py](main/serializers.py): `SkillSerializer` dengan field eksplisit `id`, `name`, `skill_type`, `description`, `image_filename`, `star_count`, dan `is_starred`. Identitas dan informasi star bersifat read-only; email, hash password, serta relasi akun tidak diekspos.
+- Input teks dibersihkan melalui `validate_<field>` dengan `strip_tags` dan pemangkasan whitespace. Teks wajib yang menjadi kosong ditolak. Batas panjang dan pilihan kategori mengikuti field serializer dari model. `skill_type` diperiksa oleh ChoiceField sebelum validator field dijalankan.
+- [main/permissions.py](main/permissions.py): `IsPortfolioOwnerOrEditorOrReadOnly` mengikuti izin `main.change_skill` dari view edit lama. Nama Group `Editor` saja tidak memberikan akses; izin dapat diberikan langsung atau melalui Group yang memiliki permission tersebut.
+- [main/api_views.py](main/api_views.py): function-based API dengan `@api_view`, `SessionAuthentication`, dan `Response`. Permission mengatur akses, serializer memvalidasi input, view mengatur alur request. Star memakai `IsAuthenticated` dan selalu mengambil identitas dari `request.user`.
+- [main/api_urls.py](main/api_urls.py): endpoint Skill berada pada prefix `/api/v1/` bersama Project dan menggunakan converter UUID.
+- [templates/skill.html](templates/skill.html): daftar, cari, tambah, edit, hapus, dan star/unstar memakai API tanpa reload. Form tambah/edit mengirim JSON dengan POST/PATCH; hapus memakai DELETE. Semua mutasi mengirim `X-CSRFToken`. Token template tersedia bagi setiap peran; kesalahan API dan jaringan ditampilkan melalui toast.
+- Teks pada markup kartu di-escape dengan `escapeHtml`; teks modal dan toast memakai `textContent`. Kontrol mengikuti peran, tetapi server tetap menjadi penentu izin. Endpoint JSON dan form lama dipertahankan untuk kompatibilitas.
+
+### API dan hak akses
+
+| Endpoint | Metode | Nama URL | Perilaku |
+|---|---|---|---|
+| `/api/v1/skills/` | GET, HEAD | `api:skill-list` | Daftar terurut menurut nama dan UUID |
+| `/api/v1/skills/?name=python` | GET | `api:skill-list` | Pencarian nama, case-insensitive; whitespace parameter dipangkas |
+| `/api/v1/skills/` | POST | `api:skill-list` | Membuat Skill |
+| `/api/v1/skills/<uuid>/` | GET, HEAD | `api:skill-detail` | Detail Skill |
+| `/api/v1/skills/<uuid>/` | PUT, PATCH | `api:skill-detail` | Mengganti seluruh field wajib atau memperbarui sebagian field |
+| `/api/v1/skills/<uuid>/` | DELETE | `api:skill-detail` | Menghapus Skill |
+| `/api/v1/skills/<uuid>/star/` | POST | `api:skill-star` | Toggle star untuk akun pada sesi |
+
+Endpoint juga mendukung OPTIONS dari DRF. Project tetap berada di `/api/v1/projects/`, dengan detail dan star menggunakan pola yang sama seperti Tutorial 07. Izin Editor pada tabel berikut khusus Skill; API Project tetap membatasi penulisan data pada pemilik.
+
+| Peran | Daftar/detail | Star/unstar | POST Skill | PUT/PATCH Skill | DELETE Skill |
+|---|---|---|---|---|---|
+| Tanpa login | Ya | Tidak | Tidak | Tidak | Tidak |
+| Pengguna biasa | Ya | Ya | Tidak | Tidak | Tidak |
+| Editor dengan `main.change_skill` | Ya | Ya | Tidak | Ya | Tidak |
+| Pemilik/superuser | Ya | Ya | Ya | Ya | Ya |
+
+Status respons: 200 untuk pembacaan/perubahan/star, 201 saat dibuat, 400 untuk input invalid, 403 untuk izin atau CSRF yang ditolak, 404 untuk objek yang tidak ditemukan, dan 204 tanpa isi setelah penghapusan. Status 404 untuk mutasi diperiksa menggunakan akun yang memang berhak; pengguna tanpa hak dapat ditolak 403 sebelum pencarian objek.
+
+Contoh payload pembuatan atau PUT lengkap:
+
+```json
+{
+  "name": "Python",
+  "skill_type": "Software",
+  "description": "Pengembangan backend Django",
+  "image_filename": "python.png"
+}
+```
+
+PATCH dapat mengirim hanya `{"description": "Deskripsi baru"}`. PUT tanpa field wajib menghasilkan 400. Field `id`, `star_count`, dan `is_starred` tidak dapat ditulis; payload `starred_by` tidak mengubah relasi star. Endpoint star tidak menerima identitas akun dari klien. Jangan mengulang POST star secara otomatis ketika respons jaringan tidak pasti, karena toggle kedua membatalkan toggle pertama.
+
+### Cara mencoba halaman dan Browsable API
+
+1. Jalankan server dan buka `/skills/`. Sebagai pengunjung, coba pencarian; login diperlukan untuk star.
+2. Buat akun biasa melalui `/register/`, lalu login di `/login/`. Akun tersebut dapat star/unstar, tetapi tidak mengelola Skill.
+3. Dengan superuser di `/admin/`, berikan permission aplikasi main untuk **change skill** kepada akun Editor, langsung atau melalui Group. Login ulang setelah mengganti permission sebelum memeriksa aksesnya.
+4. Editor dapat membuka Update, mengubah isian, dan menyimpan melalui PATCH. Pemilik juga dapat memakai Add Skill dan modal konfirmasi Delete. Hasil server dimuat ulang ke daftar melalui API.
+5. Untuk mencoba API secara langsung, buka `/api/v1/skills/`. Gunakan login Browsable API pada `/api-auth/login/`; ambil UUID dari daftar untuk membuka detail. Form JSON yang tersedia mengikuti metode yang diizinkan. Gunakan data yang boleh diubah untuk POST/PUT/PATCH/DELETE.
+
+### Fitur ekstra dan kualitas kode
+
+**Tambahan baru Tugas 6:** modal tambah/edit memfokuskan input nama saat dibuka, menjaga Tab/Shift+Tab di dalam modal, mendukung Escape, dan mengembalikan fokus ke tombol pemicu. Setelah PATCH membangun ulang kartu, fokus dicari kembali berdasarkan UUID; jika kartu tidak lagi tampil, tersedia fallback ke Add Skill atau pencarian. Petunjuk keyboard terhubung melalui `aria-describedby`. Ini membantu pengguna keyboard melanjutkan pekerjaan tanpa kehilangan posisi.
+
+**Fitur yang dipertahankan dari Tugas 5:** debounce 300 ms, pembatalan request daftar lama, loading/error/empty state, dan pencegahan submit tambah ganda. Fitur lama tersebut tidak dihitung sebagai tambahan baru Tugas 6.
+
+Daftar Skill memakai `prefetch_related("starred_by")` agar kedua field star memanfaatkan data yang sudah dimuat. `test_prefetch_keeps_list_query_count_constant` membuktikan request daftar berisi lima Skill oleh pengguna terautentikasi dengan `force_authenticate` menggunakan **2 query**. Angka ini hanya mencakup konteks test tersebut, bukan seluruh query sesi/login pada request produksi. Docstring dan komentar menjelaskan alasan permission, sanitasi, prefetch, serta pemulihan fokus setelah render ulang.
+
+### Hasil verifikasi dan batasan
+
+Pemeriksaan terakhir setelah perubahan aksesibilitas: **46 test `main` lulus**, termasuk test Tutorial 07. Detail pemetaan persyaratan dan bukti ada di [matriks audit](docs/assignment-6-plan.md).
+
+| Jenis pemeriksaan | Hasil yang diamati |
+|---|---|
+| Otomatis: Skill API | Empat peran membaca; tamu/pengguna ditolak menulis; Editor PUT/PATCH dan ditolak POST/DELETE; pemilik CRUD; database diperiksa pada penolakan |
+| Otomatis: validasi dan star | Sanitasi, input kosong/panjang/kategori, PUT wajib lengkap, PATCH parsial, field read-only, privasi, pencarian, 404, toggle star dan identitas payload diabaikan |
+| Otomatis: CSRF | `.login()` dengan `APIClient(enforce_csrf_checks=True)` menolak mutasi tanpa token tanpa mengubah database; token valid memungkinkan edit Editor dan star pengguna |
+| Otomatis: halaman dan regresi | Form sesuai peran, cookie CSRF, kategori/empty state, kompatibilitas JSON lama, dan test Project Tutorial 07 |
+| Browser, database sementara | Pengunjung mencari; pengguna star/unstar; Editor edit dan toast 400; pemilik tambah/hapus; Browsable API daftar/detail; Project tampil, mencari, star/unstar |
+| Browser, konfigurasi SQLite lokal asli | Login tiga peran, star/unstar, edit Editor, serta tambah/hapus pemilik berhasil tanpa mengubah settings; fixture dan akun uji dibersihkan setelah selesai |
+| Browser, aksesibilitas | Fokus awal nama, Tab/Shift+Tab berputar, Escape/Batal mengembalikan fokus, dan fokus Update kembali setelah PATCH/render ulang berhasil |
+
+Keterbatasan yang masih relevan:
+
+- Review dokumentasi menemukan regresi terhadap Tugas 5: API Skill baru belum memuat nama pemberi star sehingga tooltip hanya menampilkan aksi dan jumlah. Pemulihan informasi tersebut perlu persetujuan perubahan kode tersendiri sebelum dokumentasi ini dianggap final.
+- Belum ada pengukuran coverage, pengujian beban, race antar-request star bersamaan, atau pengujian lintas browser/perangkat dan screen reader. Test lulus tidak membuktikan semua skenario yang mungkin.
+- Daftar belum memakai pagination. Prefetch pengguna pemberi star membatasi jumlah query, tetapi konsumsi memori tetap tumbuh bersama data.
+- Peningkatan fokus keyboard baru berlaku pada modal tambah/edit; modal konfirmasi hapus tidak memperoleh focus trap baru pada tahap ini.
+- Peringatan lama `models.W042` pada Mahasiswa dan folder `staticfiles` yang belum dikumpulkan tetap muncul saat test. Tidak menyebabkan test gagal; tidak diubah dalam lingkup Tugas 6 ini.
+- Pengujian browser menggunakan server lokal. Deployment PWS, status publik repositori, waktu push prasyarat Tutorial 07, serta pengumpulan SCELE belum diverifikasi dalam sesi ini.
+
+
+
+### Tugas 6
+
+1. **REST, JSON, PUT, dan PATCH.** REST adalah gaya arsitektur dengan batasan client-server, stateless, cache, uniform interface, layered system, serta code-on-demand yang opsional. Uniform interface mencakup identitas resource, representasi, pesan yang menjelaskan dirinya, dan hypermedia. JSON hanya format data, sehingga respons JSON saja belum membuktikan API memenuhi batasan REST. Pada proyek ini, UUID mengidentifikasi Skill dan metode/status HTTP membedakan operasi; SessionAuthentication tetap memakai sesi server dan respons belum menyediakan hypermedia lengkap, sehingga saya tidak mengklaim kepatuhan REST penuh. [Sumber: Fielding, bab REST](https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm).
+
+   PUT menyampaikan keadaan pengganti resource, sedangkan PATCH menyampaikan perubahan sebagian. Contoh pada API ini: PUT detail Skill membawa keempat field wajib; PATCH `{"description": "Deskripsi baru"}` hanya mengubah deskripsi. View memakai `partial=True` hanya untuk PATCH; PUT yang tidak lengkap ditolak 400. Pilih PUT ketika klien mengirim representasi lengkap dan PATCH ketika hanya sebagian field diubah. [RFC 9110, PUT](https://www.rfc-editor.org/rfc/rfc9110.html#name-put), [RFC 5789, PATCH](https://www.rfc-editor.org/rfc/rfc5789.html), [DRF partial updates](https://www.django-rest-framework.org/api-guide/serializers/#partial-updates).
+
+2. **Serializer DRF.** Serializer menerjemahkan objek menjadi data primitif untuk respons serta memvalidasi dan menyimpan input. Dibanding dictionary manual dengan JsonResponse pada Tutorial 05, SkillSerializer memusatkan field keluaran, aturan input, dan proses create/update. Proyek menulis field secara eksplisit, membersihkan teks dalam validate_<field>, dan menghitung star_count/is_starred sebagai read-only. Karena itu daftar dan detail tidak perlu menyusun dictionary terpisah; kesalahan validasi juga dapat dikirim dengan struktur yang konsisten. Batas panjang dan pilihan field diturunkan ModelSerializer dari model, sedangkan aturan tambahan tetap perlu ditulis dan diuji. [Sumber: DRF serializers](https://www.django-rest-framework.org/api-guide/serializers/).
+
+3. **Autentikasi dan otorisasi.** Autentikasi menentukan siapa yang mengirim request; SessionAuthentication membaca sesi login Django dan mengisi request.user. Otorisasi menentukan tindakan yang boleh dilakukan akun tersebut. Pada Skill, permission class mengizinkan pembacaan publik, PUT/PATCH bagi akun dengan main.change_skill, dan CRUD penuh bagi superuser. Endpoint star memerlukan IsAuthenticated. Tombol tersembunyi hanya membantu tampilan: pengguna tetap dapat mengirim request sendiri dari luar halaman, sehingga server harus memeriksa izin sebelum mutasi. Test juga memastikan permintaan yang ditolak tidak mengubah database. [DRF authentication](https://www.django-rest-framework.org/api-guide/authentication/), [DRF permissions](https://www.django-rest-framework.org/api-guide/permissions/).
+
+4. **SessionAuthentication dan CSRF.** Browser dapat mengirim cookie sesi secara otomatis; tanpa verifikasi CSRF, situs lain berpotensi mencoba tindakan memakai sesi korban. Karena itu POST, PUT, PATCH, dan DELETE pada sesi terautentikasi tetap memerlukan token CSRF valid. Halaman Skill menyediakan token template/cookie, dan requestSkill mengirim X-CSRFToken untuk mutasi. force_authenticate mengisi identitas secara langsung, melewati autentikasi sesi sehingga tidak membuktikan login ataupun CSRF. Test terpisah memakai APIClient(enforce_csrf_checks=True) dan .login(), memeriksa 403 tanpa token serta database tetap, lalu keberhasilan token valid. [DRF SessionAuthentication](https://www.django-rest-framework.org/api-guide/authentication/#sessionauthentication), [DRF testing: CSRF validation](https://www.django-rest-framework.org/api-guide/testing/#csrf-validation).
+
+### AI disclosure Tugas 6
+
+Dalam pengerjaan Tugas 6 ini, saya menggunakan bantuan generative AI, yakni Gemini, untuk memahami konsep dasar dan membuat kerangka awal implementasi Django REST Framework (DRF) pada fitur Skills saya. Bantuan AI mencakup pembuatan serializer, permission classes, API views, hingga penulisan test. Namun, kode yang dihasilkan AI masih bersifat umum dan belum sepenuhnya memenuhi spesifikasi rubrik tugas, sehingga saya melakukan modifikasi dan analisis kritis sebagai berikut:
+
+1. Penyesuaian Serializer dan Validasi Keamanan
+  - Output: Contoh awal menggunakan django.core.serializers.serialize() untuk mengubah objek Skill menjadi JSON, tanpa memberikan implementasi serializer DRF dan field perhitungan star.
+  - Perbaikan: Saya mengimplementasikan SkillSerializer berbasis ModelSerializer dengan daftar field eksplisit, termasuk name, skill_type, description, dan image_filename. Saya mengatur agar field perhitungan star bersifat read-only, dan memastikan respons tidak menyertakan data sensitif pengguna. Untuk validasi teks, saya menggunakan strip_tags() untuk membersihkan tag HTML, disertai escaping pada frontend untuk mengurangi risiko XSS.
+
+2. Implementasi Hak Akses
+  - Output: Contoh awal belum menyediakan permission DRF yang membedakan pengunjung, pengguna biasa, Editor, dan owner. Contoh awal juga menyarankan relasi kepemilikan Skill.user, yang tidak sesuai dengan model portofolio yang sudah digunakan.
+  - Perbaikan: Saya mempertahankan model Skill yang sudah ada. Untuk API daftar dan detail, saya menggunakan IsPortfolioOwnerOrEditorOrReadOnly. Pengunjung hanya dapat membaca; pengguna login dapat memberi atau membatalkan star; Editor dengan permission main.change_skill dapat melakukan PUT/PATCH, tetapi tidak dapat membuat atau menghapus data. Owner yang direpresentasikan sebagai superuser memiliki akses penuh. Pada endpoint star, saya menggunakan IsAuthenticated dan mengambil identitas dari request.user.
+
+3. Pembuatan API Views dan Penanganan Status HTTP
+  - Output: Contoh menggunakan function-based views Django biasa untuk mengambil daftar dan menambahkan Skill. Contoh tersebut belum memakai DRF serta mengembalikan 404 ketika input tambah tidak lengkap.
+  - Perbaikan: Saya mengimplementasikan function-based API views dengan dekorator @api_view dan SessionAuthentication. Saya menyesuaikan status respons menjadi: 201 untuk pembuatan berhasil, 400 untuk validasi gagal, 403 untuk akses yang ditolak, 404 untuk objek yang tidak ditemukan setelah pemeriksaan izin, dan 204 untuk penghapusan berhasil. Penanganannya menggunakan respons eksplisit serta mekanisme validasi dan exception DRF/Django. Saya juga menambahkan fitur pencarian melalui parameter query name pada endpoint daftar.
+
+4. Integrasi Frontend, Fetch API, dan CSRF
+  - Output: Contoh menyertakan token CSRF dalam form, tetapi endpoint tambah menggunakan @csrf_exempt, sehingga pemeriksaan CSRF pada endpoint tersebut dinonaktifkan. Contoh juga belum memeriksa response.ok dan memasukkan data langsung ke innerHTML tanpa escaping.
+  - Perbaikan: Saya memastikan API perubahan data tetap menggunakan pemeriksaan CSRF. Saya membuat helper JavaScript untuk menyisipkan header X-CSRFToken pada setiap permintaan perubahan data, memeriksa respons API, dan menampilkan pesan kesalahan seperti 400 atau 403 melalui toast. Data juga saya escape terlebih dahulu sebelum dirender ke DOM. Saya mengimplementasikan modal edit yang mengirim permintaan PATCH tanpa reload halaman, sementara endpoint-nya juga tetap mendukung metode PUT.
+
+5. Penambahan Pengujian API
+  - Output: Percakapan awal belum memberikan implementasi pengujian.
+  - Perbaikan: Saya menambahkan pengujian (test cases) untuk memeriksa keempat peran pengguna, fitur CRUD, pencarian, validasi serializer, serta aksi star/unstar. Selain mengecek status HTTP, tes yang saya tulis juga memastikan keadaan database sesuai harapan, termasuk memastikan data benar-benar tidak berubah ketika akses ditolak. Saya juga secara khusus menguji perlindungan CSRF menggunakan APIClient(enforce_csrf_checks=True) dan .login() agar pemeriksaan menggunakan autentikasi sesi.
+
+Berikut adalah link log saya dengan Gemini:
+- https://share.gemini.google/64hsksSNzUrR
+
+
 
 
 
