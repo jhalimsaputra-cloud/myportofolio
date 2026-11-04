@@ -410,6 +410,59 @@
     let editingSkillId = null;
     let savingSkill = false;
     let editRequestVersion = 0;
+    let skillModalTrigger = null;
+    let returnToSkillId = null;
+
+    function restoreSkillModalFocus() {
+        // A successful save rebuilds the cards, so the original edit button may be detached.
+        const trigger = skillModalTrigger?.isConnected ? skillModalTrigger :
+            (returnToSkillId ? document.querySelector(
+                `button[data-action="edit"][data-id="${CSS.escape(returnToSkillId)}"]`
+            ) : null);
+        const fallback = document.getElementById("add-skill-button") || searchInput;
+        (trigger && !trigger.disabled ? trigger : fallback).focus();
+    }
+
+    if (skillModal) {
+        skillModal.addEventListener("toggle", event => {
+            if (event.newState === "closed" && !skillModal.matches(":popover-open")) {
+                restoreSkillModalFocus();
+            }
+        });
+
+        document.addEventListener("keydown", event => {
+            if (!skillModal.matches(":popover-open")) return;
+            if (event.key === "Escape") {
+                event.preventDefault();
+                event.stopPropagation();
+                closeSkillModal();
+                return;
+            }
+            if (event.key !== "Tab") return;
+            const controls = [...skillModal.querySelectorAll(
+                'button, input:not([type="hidden"]), select, textarea, a[href], [tabindex]'
+            )].filter(control => control.tabIndex >= 0 && !control.disabled &&
+                control.getClientRects().length > 0);
+            const first = controls[0];
+            const last = controls[controls.length - 1];
+            if (!first) {
+                event.preventDefault();
+                skillModal.focus();
+            } else if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }, true);
+
+        document.addEventListener("focusin", event => {
+            if (skillModal.matches(":popover-open") && !skillModal.contains(event.target)) {
+                skillForm.elements.namedItem("name").focus();
+            }
+        });
+    }
 
     function getCookie(name) {
         const prefix = name + "=";
@@ -451,7 +504,9 @@
         return data;
     }
 
-    function prepareSkillForm(skill = null) {
+    function prepareSkillForm(skill = null, trigger = null) {
+        skillModalTrigger = trigger;
+        returnToSkillId = skill ? String(skill.id) : null;
         editingSkillId = skill ? skill.id : null;
         skillForm.reset();
         if (skill) {
@@ -462,6 +517,7 @@
         skillForm.querySelector('button[type="submit"]').textContent =
             skill ? "Simpan Perubahan" : "Tambah Skill";
         if (!skillModal.matches(":popover-open")) skillModal.showPopover();
+        skillForm.elements.namedItem("name").focus();
     }
 
     const addSkillButton = document.getElementById("add-skill-button");
@@ -469,7 +525,7 @@
         addSkillButton.addEventListener("click", () => {
             if (savingSkill) return;
             editRequestVersion++;
-            prepareSkillForm();
+            prepareSkillForm(null, addSkillButton);
         });
     }
 
@@ -494,6 +550,7 @@
             showToast("Berhasil!", isEditing
                 ? "Skill berhasil diperbarui!" : "Skill berhasil ditambahkan!", "success");
             await fetchSkills(searchInput.value.trim());
+            restoreSkillModalFocus();
         } catch (error) {
             showToast("Gagal menyimpan skill", error.message, "error");
         } finally {
@@ -534,7 +591,7 @@
         const version = ++editRequestVersion;
         try {
             const skill = await requestSkill(DETAIL_URL.replace(DUMMY_UUID, button.dataset.id));
-            if (version === editRequestVersion && !savingSkill) prepareSkillForm(skill);
+            if (version === editRequestVersion && !savingSkill) prepareSkillForm(skill, button);
         } catch (error) {
             if (version === editRequestVersion) showToast("Gagal membuka skill", error.message, "error");
         } finally {

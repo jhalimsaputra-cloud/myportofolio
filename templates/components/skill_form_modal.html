@@ -4,6 +4,8 @@
     popover="auto"
     role="dialog"
     aria-modal="true"
+    tabindex="-1"
+    aria-describedby="skill-modal-help"
     aria-labelledby="add-skill-modal-title">
 
     <!-- Backdrop untuk menutup modal -->
@@ -12,6 +14,7 @@
         class="project-delete-modal__backdrop"
         popovertarget="add-skill-modal"
         popovertargetaction="hide"
+        tabindex="-1"
         aria-label="Tutup form skill">
     </button>
 
@@ -30,6 +33,8 @@
         <h2 id="add-skill-modal-title">
             Tambah Skill Baru
         </h2>
+
+        <p id="skill-modal-help">Gunakan Tab untuk berpindah isian dan Escape untuk menutup form.</p>
 
         <form
             id="skill-form"
