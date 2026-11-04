@@ -1,26 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Website Feedback</h1>
-    <p>Before submitting, please make sure : </p>
-    <ul>
-        <li>Your information is correct</li>
-        <li>You have selected a rating</li>
-    </ul>
-    <form action = "POST">
-        <label for="fname">Full name:</label><br>
-        <input type="text" id="fname" name="fname"><br>
-        <label for="lname">email:</label><br>
-        <input type="text" id="lname" name="lname">
-        </br></br>
-        <input type="submit" value="Submit">
-    </form>
-
-    
-</body>
-</html>
+{% extends "base.html" %}
+{% block meta %}<title>Website Feedback - {{ name }}</title>{% endblock meta %}
+{% block content %}
+<main>
+    <section class="experience-section">
+        <div class="container">
+            <h1>Website Feedback</h1>
+            <p>Form latihan untuk memeriksa nama dan email. Data tidak disimpan atau dikirim.</p>
+            {% for message in messages %}
+                <p class="form-message" role="status">{{ message }}</p>
+            {% endfor %}
+            <form method="post" action="{% url 'main:show_test' %}" class="project-form">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                {% for field in form %}
+                    <div class="form-group">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <p class="form-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="button">Submit</button>
+            </form>
+        </div>
+    </section>
+</main>
+{% endblock content %}

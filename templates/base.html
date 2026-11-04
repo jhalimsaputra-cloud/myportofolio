@@ -4,12 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ name }} - Portfolio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
-    {% block meta %} {% endblock meta %}
+    {% block meta %}<title>{{ name }} - Portfolio</title>{% endblock meta %}
 </head>
 
 <body>
@@ -40,10 +39,10 @@
 
             {% if user.is_authenticated %}
                 <span class="nav-user">{{ user.username }}</span>
-                <a href="{% url 'main:logout' %}"
-                class="{% if request.resolver_match.url_name == 'logout' %}active{% endif %}">
-                Logout
-                </a>
+                <form method="post" action="{% url 'main:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-logout">Logout</button>
+                </form>
             {% else %}
                 <a href="{% url 'main:login' %}"
                 class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}">

@@ -45,10 +45,16 @@ class ProjectSerializer(serializers.ModelSerializer):
 
         return value
     def validate_description(self, value):
-        return strip_tags(value)
+        value = strip_tags(value).strip()
+        if not value:
+            raise serializers.ValidationError("Description cannot be empty after cleaning.")
+        return value
 
     def validate_tech_stack(self, value):
-        return strip_tags(value)
+        value = strip_tags(value).strip()
+        if not value:
+            raise serializers.ValidationError("Tech stack cannot be empty after cleaning.")
+        return value
 
 
 class SkillSerializer(serializers.ModelSerializer):

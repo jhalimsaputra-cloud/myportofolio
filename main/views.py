@@ -7,11 +7,10 @@ from django.core import serializers
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.exceptions import PermissionDenied   
-from django.contrib.messages import get_messages
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 
 from main.models import Experience, Mahasiswa, Skill, Project
-from main.forms import ProjectForm, SkillForm
+from main.forms import FeedbackForm, ProjectForm, SkillForm
 
 
 def show_main(request):
@@ -131,8 +130,6 @@ def get_skills_json(request):
 
 
 def show_skills(request):
-    list(get_messages(request))
-
     name_query = request.GET.get("name", "").strip()
 
     context = {
@@ -290,6 +287,7 @@ def login_user(request):
     }
     return render(request, "login.html", context)
 
+@require_POST
 def logout_user(request):
     logout(request)
     response = redirect("main:show_main")
@@ -322,8 +320,12 @@ def toggle_star_skill(request, skill_id):
             skill.starred_by.add(request.user)
     return redirect("main:show_skills")
 
+@require_http_methods(["GET", "POST"])
 def show_test(request):
-    context = {"name " : "Justin Evan Halim Saputra",
-               "jurusan" : "Ilmu Komputer"}
+    form = FeedbackForm(request.POST if request.method == "POST" else None)
+    if request.method == "POST" and form.is_valid():
+        messages.success(request, "Data formulir valid. Form latihan ini tidak menyimpan atau mengirim data.")
+        return redirect("main:show_test")
+    context = {"name": "Justin Evan Halim Saputra", "form": form}
     return render(request, "formcoba.html", context)
 

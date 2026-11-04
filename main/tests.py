@@ -170,3 +170,99 @@ class SkillViewTest(TestCase):
                     self.assertContains(response, 'id="add-skill-button"')
                 else:
                     self.assertNotContains(response, 'id="add-skill-button"')
+
+
+class WebsiteRegressionTest(TestCase):
+    def test_logout_requires_post_and_valid_csrf(self):
+        user = User.objects.create_user(username="logout-check", password="test-password")
+        client = Client(enforce_csrf_checks=True)
+        self.assertTrue(client.login(username=user.username, password="test-password"))
+        logout_url = reverse("main:logout")
+        response = client.get(logout_url)
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(client.session["_auth_user_id"], str(user.pk))
+        self.assertEqual(client.post(logout_url).status_code, 403)
+        self.assertEqual(client.session["_auth_user_id"], str(user.pk))
+        page = client.get(reverse("main:show_main"))
+        self.assertContains(page, f'action="{logout_url}"')
+        token = client.cookies["csrftoken"].value
+        response = client.post(logout_url, HTTP_X_CSRFTOKEN=token)
+        self.assertRedirects(response, reverse("main:show_main"))
+        self.assertNotIn("_auth_user_id", client.session)
+
+    def test_pages_have_exactly_one_title(self):
+        for name, title in (
+            ("show_main", "Justin Evan Halim Saputra - Portfolio"),
+            ("show_experience", "Justin Evan Halim Saputra - Portfolio"),
+            ("show_education", "Justin Evan Halim Saputra - Portfolio"),
+            ("show_skills", "Skills - Justin Evan Halim Saputra"),
+            ("show_projects", "Projects - Justin Evan Halim Saputra"),
+            ("login", "Login - Justin Evan Halim Saputra"),
+            ("register", "Register - Justin Evan Halim Saputra"),
+            ("show_test", "Website Feedback - Justin Evan Halim Saputra"),
+        ):
+            with self.subTest(page=name):
+                response = self.client.get(reverse(f"main:{name}"))
+                self.assertContains(response, "<title>", count=1)
+                self.assertContains(response, "</title>", count=1)
+                self.assertContains(response, title)
+
+    def test_legacy_skill_success_messages_survive_redirect_once(self):
+        owner = User.objects.create_superuser(username="legacy-owner")
+        self.client.force_login(owner)
+        payload = {
+            "name": "Legacy Skill", "skill_type": "Software",
+            "description": "Valid description", "image_filename": "python.png",
+        }
+        response = self.client.post(reverse("main:create_skill"), payload, follow=True)
+        self.assertContains(response, "Skill baru berhasil ditambahkan!")
+        skill = Skill.objects.get(name="Legacy Skill")
+        response = self.client.get(reverse("main:show_skills"))
+        self.assertNotContains(response, "Skill baru berhasil ditambahkan!")
+        response = self.client.post(reverse("main:update_skill", args=[skill.pk]), {
+            **payload, "name": "Updated legacy skill",
+        }, follow=True)
+        self.assertContains(response, "Skill berhasil diperbarui!")
+        skill.refresh_from_db()
+        self.assertEqual(skill.name, "Updated legacy skill")
+        response = self.client.post(reverse("main:delete_skill", args=[skill.pk]), follow=True)
+        self.assertContains(response, "Skill berhasil dihapus!")
+        self.assertFalse(Skill.objects.filter(pk=skill.pk).exists())
+
+    def test_feedback_accepts_valid_post_and_redirects(self):
+        url = reverse("main:show_test")
+        response = self.client.post(url, {"fname": "Example Reader", "lname": "reader@example.com"})
+        self.assertRedirects(response, url)
+        page = self.client.get(url)
+        self.assertNotContains(page, "reader@example.com")
+        self.assertEqual(User.objects.count(), 0)
+        self.assertEqual(Skill.objects.count(), 0)
+
+    def test_feedback_shows_confirmation_after_valid_post(self):
+        response = self.client.post(reverse("main:show_test"), {
+            "fname": "Example Reader", "lname": "reader@example.com",
+        }, follow=True)
+        self.assertContains(response, "Data formulir valid.")
+        self.assertContains(response, "tidak menyimpan atau mengirim data.")
+
+    def test_feedback_rejects_invalid_input(self):
+        for payload, field in (
+            ({"fname": "<b></b>", "lname": "reader@example.com"}, "fname"),
+            ({"fname": "Reader", "lname": "invalid-email"}, "lname"),
+            ({}, "fname"),
+        ):
+            with self.subTest(payload=payload):
+                response = self.client.post(reverse("main:show_test"), payload)
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(field, response.context["form"].errors)
+        self.assertEqual(self.client.put(reverse("main:show_test")).status_code, 405)
+
+    def test_feedback_requires_csrf(self):
+        client = Client(enforce_csrf_checks=True)
+        url = reverse("main:show_test")
+        payload = {"fname": "Example Reader", "lname": "reader@example.com"}
+        self.assertEqual(client.post(url, payload).status_code, 403)
+        page = client.get(url)
+        self.assertEqual(page.status_code, 200)
+        token = client.cookies["csrftoken"].value
+        self.assertEqual(client.post(url, payload, HTTP_X_CSRFTOKEN=token).status_code, 302)

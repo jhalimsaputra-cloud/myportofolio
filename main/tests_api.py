@@ -440,6 +440,8 @@ class ProjectAPITest(APITestCase):
 
         for changes, field in [
             ({"title": "   "}, "title"),
+            ({"description": "<p></p>"}, "description"),
+            ({"tech_stack": "<b> </b>"}, "tech_stack"),
             (
                 {"title": '<img src="x" onerror="alert(1)">'},
                 "title",
@@ -462,6 +464,32 @@ class ProjectAPITest(APITestCase):
             self.assertIn(field, response.data)
 
         self.assertEqual(Project.objects.count(), 1)
+
+    def test_invalid_project_updates_preserve_database(self):
+        self.client.force_authenticate(user=self.owner)
+        for method in ("put", "patch"):
+            for field in ("description", "tech_stack"):
+                with self.subTest(method=method, field=field):
+                    payload = {**self.payload, field: "<p> </p>"}
+                    response = getattr(self.client, method)(self.detail_url, payload, format="json")
+                    self.assertEqual(response.status_code, 400)
+                    self.assertIn(field, response.data)
+                    self.project.refresh_from_db()
+                    self.assertEqual(self.project.title, "Portfolio")
+                    self.assertEqual(self.project.description, "My website")
+                    self.assertEqual(self.project.tech_stack, "Django")
+                    self.assertEqual(Project.objects.count(), 1)
+
+    def test_project_text_is_sanitized_and_trimmed(self):
+        self.client.force_authenticate(user=self.owner)
+        response = self.client.patch(self.detail_url, {
+            "description": " <p>Clean description</p> ",
+            "tech_stack": " <b>Django</b> ",
+        }, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.description, "Clean description")
+        self.assertEqual(self.project.tech_stack, "Django")
 
     def test_patch_put_and_delete(self):
         self.client.force_authenticate(user=self.owner)

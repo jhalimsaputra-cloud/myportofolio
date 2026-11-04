@@ -24,6 +24,10 @@
                 {% endif %}
             </div>
 
+            {% for message in messages %}
+                <p class="form-message" role="status">{{ message }}</p>
+            {% endfor %}
+
             <form id="skill-search-form" class="project-search">
                 <input type="search" id="search-input" name="name"
                        value="{{ name_query }}" placeholder="Cari berdasarkan nama skill"
