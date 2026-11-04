@@ -12,7 +12,7 @@
         class="project-delete-modal__backdrop"
         popovertarget="add-skill-modal"
         popovertargetaction="hide"
-        aria-label="Tutup form tambah skill">
+        aria-label="Tutup form skill">
     </button>
 
     <div class="project-delete-modal__content">
@@ -23,7 +23,7 @@
             class="project-delete-modal__close"
             popovertarget="add-skill-modal"
             popovertargetaction="hide"
-            aria-label="Tutup form tambah skill">
+            aria-label="Tutup form skill">
             ×
         </button>
 
@@ -34,7 +34,7 @@
         <form
             id="skill-form"
             method="post"
-            action="{% url 'main:create_skill' %}"
+            action="{% url 'api:skill-list' %}"
             class="skill-form">
 
             {% csrf_token %}

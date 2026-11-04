@@ -1,4 +1,5 @@
-from django.test import TestCase
+from django.contrib.auth.models import Permission, User
+from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
@@ -140,3 +141,32 @@ class SkillViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()[0]["pk"], str(skill.pk))
         self.assertEqual(response.json()[0]["fields"]["name"], skill.name)
+
+    def test_management_form_and_csrf_cookie_follow_roles(self):
+        user = User.objects.create_user(username="page-reader")
+        editor = User.objects.create_user(username="page-editor")
+        editor.user_permissions.add(Permission.objects.get(
+            content_type__app_label="main", codename="change_skill",
+        ))
+        owner = User.objects.create_superuser(username="page-owner")
+        for account, can_edit, can_create in (
+            (None, False, False), (user, False, False),
+            (editor, True, False), (owner, True, True),
+        ):
+            with self.subTest(account=account):
+                client = Client(enforce_csrf_checks=True)
+                if account is not None:
+                    client.force_login(account)
+                response = client.get(reverse("main:show_skills"))
+                self.assertEqual(response.status_code, 200)
+                self.assertIn("csrftoken", response.cookies)
+                self.assertContains(response, 'name="csrfmiddlewaretoken"')
+                if can_edit:
+                    self.assertContains(response, 'id="skill-form"')
+                    self.assertContains(response, f'action="{reverse("api:skill-list")}"')
+                else:
+                    self.assertNotContains(response, 'id="skill-form"')
+                if can_create:
+                    self.assertContains(response, 'id="add-skill-button"')
+                else:
+                    self.assertNotContains(response, 'id="add-skill-button"')
