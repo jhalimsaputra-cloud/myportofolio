@@ -27,8 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-h(cfd*srzri%g&up#fld%rhyv4c6xw8(yd_fymj*9zy1m4!^uv'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# PWS sets PRODUCTION=True; detailed error pages are for local development only.
+PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
+DEBUG = not PRODUCTION
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "justin-evan-myportofolio.pws.cs.ui.ac.id"]
 
@@ -38,9 +39,6 @@ CSRF_TRUSTED_ORIGINS = [
 
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
-
-PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
-
 
 # Application definition
 

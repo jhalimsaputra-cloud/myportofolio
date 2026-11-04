@@ -1,9 +1,32 @@
+import os
+import runpy
+from unittest.mock import patch
+
 from django.contrib.auth.models import Permission, User
-from django.test import Client, TestCase
+from django.test import Client, SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from main.models import Experience, Skill
+
+
+class EnvironmentSettingsTest(SimpleTestCase):
+    def load_settings(self, production):
+        with patch.dict(os.environ, {"PRODUCTION": production}), patch("dotenv.load_dotenv"):
+            settings_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "portofolio", "settings.py")
+            return runpy.run_path(settings_path, run_name="_settings_check_")
+
+    def test_production_disables_debug(self):
+        for value in ("True", "true", "TRUE"):
+            with self.subTest(value=value):
+                config = self.load_settings(value)
+                self.assertTrue(config["PRODUCTION"])
+                self.assertFalse(config["DEBUG"])
+
+    def test_local_development_enables_debug(self):
+        config = self.load_settings("False")
+        self.assertFalse(config["PRODUCTION"])
+        self.assertTrue(config["DEBUG"])
 
 
 class MainTest(TestCase):
