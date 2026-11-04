@@ -54,14 +54,15 @@ class ProjectSerializer(serializers.ModelSerializer):
 class SkillSerializer(serializers.ModelSerializer):
     star_count = serializers.SerializerMethodField()
     is_starred = serializers.SerializerMethodField()
+    starred_by_names = serializers.SerializerMethodField()
 
     class Meta:
         model = Skill
         fields = [
             "id", "name", "skill_type", "description", "image_filename",
-            "star_count", "is_starred",
+            "star_count", "is_starred", "starred_by_names",
         ]
-        read_only_fields = ["id", "star_count", "is_starred"]
+        read_only_fields = ["id", "star_count", "is_starred", "starred_by_names"]
 
     def get_star_count(self, obj):
         return obj.starred_by.count()
@@ -72,6 +73,9 @@ class SkillSerializer(serializers.ModelSerializer):
             return False
         # Iteration reuses prefetched users when the list view supplies them.
         return any(user.pk == request.user.pk for user in obj.starred_by.all())
+
+    def get_starred_by_names(self, obj):
+        return ", ".join(sorted(user.username for user in obj.starred_by.all()))
 
     def _clean_required_text(self, value):
         """Reject text that becomes empty after removing HTML and whitespace."""

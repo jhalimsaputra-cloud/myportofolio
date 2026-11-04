@@ -146,7 +146,8 @@
 
         const starTitle = escapeHtml(
             (skill.is_starred ? "Batalkan star" : "Beri star") +
-            " — " + (skill.star_count ?? 0) + " star"
+            " — " + (skill.star_count ?? 0) + " star" +
+            (skill.starred_by_names ? " — " + skill.starred_by_names : "")
         );
 
         // Logo

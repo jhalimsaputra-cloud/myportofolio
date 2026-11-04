@@ -120,6 +120,7 @@ class SkillAPITest(APITestCase):
             "name": " <b>Django</b> ", "description": " <p>Clean</p> ",
             "image_filename": " <b>django.png</b> ",
             "star_count": 123, "is_starred": True, "starred_by": [self.user.pk],
+            "starred_by_names": "forged-name",
         }, format="json")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["name"], "Django")
@@ -127,9 +128,11 @@ class SkillAPITest(APITestCase):
         self.assertEqual(response.data["image_filename"], "django.png")
         self.assertEqual(response.data["star_count"], 0)
         self.assertFalse(response.data["is_starred"])
+        self.assertEqual(response.data["starred_by_names"], "")
         self.assertEqual(self.skill.starred_by.count(), 0)
         self.assertEqual(set(response.data), {
             "id", "name", "skill_type", "description", "image_filename", "star_count", "is_starred",
+            "starred_by_names",
         })
 
     def test_star_requires_login_and_ignores_forged_identity(self):
@@ -141,11 +144,13 @@ class SkillAPITest(APITestCase):
             self.assertEqual(response.status_code, 200)
             self.assertTrue(response.data["is_starred"])
             self.assertEqual(response.data["star_count"], 1)
+            self.assertEqual(response.data["starred_by_names"], user.username)
             self.assertEqual(list(self.skill.starred_by.values_list("pk", flat=True)), [user.pk])
             response = self.client.post(self.star_url)
             self.assertEqual(response.status_code, 200)
             self.assertFalse(response.data["is_starred"])
             self.assertEqual(response.data["star_count"], 0)
+            self.assertEqual(response.data["starred_by_names"], "")
             self.assert_original_data()
 
     def test_session_mutations_require_csrf(self):
@@ -213,11 +218,12 @@ class SkillSerializerTest(APITestCase):
         data = self.serialize_for(self.user)
         self.assertEqual(set(data), {
             "id", "name", "skill_type", "description", "image_filename",
-            "star_count", "is_starred",
+            "star_count", "is_starred", "starred_by_names",
         })
         self.assertEqual(data["id"], str(self.skill.pk))
         self.assertEqual(data["star_count"], 1)
         self.assertTrue(data["is_starred"])
+        self.assertEqual(data["starred_by_names"], self.user.username)
         self.assertNotIn(self.user.email, str(data))
         self.assertNotIn(self.user.password, str(data))
         self.assertFalse(self.serialize_for(AnonymousUser())["is_starred"])
@@ -264,6 +270,7 @@ class SkillSerializerTest(APITestCase):
         serializer = SkillSerializer(data={
             **self.payload, "id": str(forged_id), "star_count": 99,
             "is_starred": True, "starred_by": [self.user.pk],
+            "starred_by_names": "forged-name",
         })
         self.assertTrue(serializer.is_valid(), serializer.errors)
         created = serializer.save()
@@ -271,9 +278,26 @@ class SkillSerializerTest(APITestCase):
         self.assertEqual(created.starred_by.count(), 0)
         self.assertEqual(serializer.data["star_count"], 0)
         self.assertFalse(serializer.data["is_starred"])
+        self.assertEqual(serializer.data["starred_by_names"], "")
         self.assertTrue(all(serializer.fields[name].read_only for name in (
-            "id", "star_count", "is_starred",
+            "id", "star_count", "is_starred", "starred_by_names",
         )))
+
+    def test_star_names_contain_only_actual_usernames_in_stable_order(self):
+        other = User.objects.create_user(
+            username='a-reader-"<test>', email="other-private@example.com",
+        )
+        self.skill.starred_by.add(self.user, other)
+        data = self.serialize_for(self.user)
+        self.assertEqual(data["starred_by_names"], f"{other.username}, {self.user.username}")
+        self.assertNotIn(other.email, str(data))
+        serializer = SkillSerializer(self.skill, data={
+            "starred_by_names": "forged-name", "starred_by": [],
+        }, partial=True)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        serializer.save()
+        self.assertEqual(self.skill.starred_by.count(), 2)
+        self.assertEqual(serializer.data["starred_by_names"], data["starred_by_names"])
 
     def test_partial_update_preserves_unspecified_fields(self):
         serializer = SkillSerializer(
