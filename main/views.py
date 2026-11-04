@@ -7,10 +7,10 @@ from django.core import serializers
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.exceptions import PermissionDenied   
-from django.views.decorators.http import require_POST, require_http_methods
+from django.views.decorators.http import require_POST
 
 from main.models import Experience, Mahasiswa, Skill, Project
-from main.forms import FeedbackForm, ProjectForm, SkillForm
+from main.forms import ProjectForm, SkillForm
 
 
 def show_main(request):
@@ -319,13 +319,3 @@ def toggle_star_skill(request, skill_id):
         else:
             skill.starred_by.add(request.user)
     return redirect("main:show_skills")
-
-@require_http_methods(["GET", "POST"])
-def show_test(request):
-    form = FeedbackForm(request.POST if request.method == "POST" else None)
-    if request.method == "POST" and form.is_valid():
-        messages.success(request, "Data formulir valid. Form latihan ini tidak menyimpan atau mengirim data.")
-        return redirect("main:show_test")
-    context = {"name": "Justin Evan Halim Saputra", "form": form}
-    return render(request, "formcoba.html", context)
-

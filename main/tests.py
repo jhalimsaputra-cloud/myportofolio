@@ -222,7 +222,6 @@ class WebsiteRegressionTest(TestCase):
             ("show_projects", "Projects - Justin Evan Halim Saputra"),
             ("login", "Login - Justin Evan Halim Saputra"),
             ("register", "Register - Justin Evan Halim Saputra"),
-            ("show_test", "Website Feedback - Justin Evan Halim Saputra"),
         ):
             with self.subTest(page=name):
                 response = self.client.get(reverse(f"main:{name}"))
@@ -251,41 +250,3 @@ class WebsiteRegressionTest(TestCase):
         response = self.client.post(reverse("main:delete_skill", args=[skill.pk]), follow=True)
         self.assertContains(response, "Skill berhasil dihapus!")
         self.assertFalse(Skill.objects.filter(pk=skill.pk).exists())
-
-    def test_feedback_accepts_valid_post_and_redirects(self):
-        url = reverse("main:show_test")
-        response = self.client.post(url, {"fname": "Example Reader", "lname": "reader@example.com"})
-        self.assertRedirects(response, url)
-        page = self.client.get(url)
-        self.assertNotContains(page, "reader@example.com")
-        self.assertEqual(User.objects.count(), 0)
-        self.assertEqual(Skill.objects.count(), 0)
-
-    def test_feedback_shows_confirmation_after_valid_post(self):
-        response = self.client.post(reverse("main:show_test"), {
-            "fname": "Example Reader", "lname": "reader@example.com",
-        }, follow=True)
-        self.assertContains(response, "Data formulir valid.")
-        self.assertContains(response, "tidak menyimpan atau mengirim data.")
-
-    def test_feedback_rejects_invalid_input(self):
-        for payload, field in (
-            ({"fname": "<b></b>", "lname": "reader@example.com"}, "fname"),
-            ({"fname": "Reader", "lname": "invalid-email"}, "lname"),
-            ({}, "fname"),
-        ):
-            with self.subTest(payload=payload):
-                response = self.client.post(reverse("main:show_test"), payload)
-                self.assertEqual(response.status_code, 200)
-                self.assertIn(field, response.context["form"].errors)
-        self.assertEqual(self.client.put(reverse("main:show_test")).status_code, 405)
-
-    def test_feedback_requires_csrf(self):
-        client = Client(enforce_csrf_checks=True)
-        url = reverse("main:show_test")
-        payload = {"fname": "Example Reader", "lname": "reader@example.com"}
-        self.assertEqual(client.post(url, payload).status_code, 403)
-        page = client.get(url)
-        self.assertEqual(page.status_code, 200)
-        token = client.cookies["csrftoken"].value
-        self.assertEqual(client.post(url, payload, HTTP_X_CSRFTOKEN=token).status_code, 302)

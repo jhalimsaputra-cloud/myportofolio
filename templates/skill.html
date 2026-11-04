@@ -166,7 +166,7 @@
             : "";
 
         // Tombol star
-        const starHtml = IS_AUTHENTICATED ? `
+        const starHtml = `
             <form
                 method="post"
                 action="${starUrl}"
@@ -200,7 +200,7 @@
                     </span>
                 </button>
             </form>
-        ` : `<a href="{% url 'main:login' %}" class="button">Login untuk star (${starCount})</a>`;
+        `;
 
         // Tombol Update
         const updateHtml = (IS_SUPERUSER || CAN_CHANGE_SKILL)
@@ -570,6 +570,10 @@
         const form = event.target.closest("form[data-action]");
         if (!form) return;
         event.preventDefault();
+        if (form.dataset.action === "star" && !IS_AUTHENTICATED) {
+            window.location.assign("{% url 'main:login' %}");
+            return;
+        }
         const button = form.querySelector('button[type="submit"]');
         if (button.disabled) return;
         button.disabled = true;

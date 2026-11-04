@@ -1,20 +1,10 @@
-from django.forms import CharField, EmailField, Form, ModelForm, TextInput, Textarea, URLInput, Select
+from django.forms import ModelForm, TextInput, Textarea, URLInput, Select
 
 from main.models import Project, Skill
 
 from django.core.exceptions import ValidationError
 from django.utils.html import strip_tags
 
-
-class FeedbackForm(Form):
-    fname = CharField(label="Full name", max_length=100)
-    lname = EmailField(label="Email")
-
-    def clean_fname(self):
-        name = strip_tags(self.cleaned_data["fname"]).strip()
-        if not name:
-            raise ValidationError("Nama tidak boleh kosong setelah dibersihkan.")
-        return name
 
 class ProjectForm(ModelForm):
     class Meta:
