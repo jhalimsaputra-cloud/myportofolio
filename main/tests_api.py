@@ -1,6 +1,6 @@
 import uuid
 
-from django.contrib.auth.models import AnonymousUser, Group, User
+from django.contrib.auth.models import AnonymousUser, Group, Permission, User
 from django.test import RequestFactory
 from django.urls import reverse
 from rest_framework import status
@@ -8,6 +8,187 @@ from rest_framework.test import APIClient, APITestCase
 
 from main.models import Project, Skill
 from main.serializers import SkillSerializer
+
+
+class SkillAPITest(APITestCase):
+    def setUp(self):
+        self.owner = User.objects.create_superuser(username="skill-owner", password="test-password")
+        self.user = User.objects.create_user(username="skill-user", password="test-password")
+        self.editor = User.objects.create_user(username="skill-editor", password="test-password")
+        self.editor.user_permissions.add(Permission.objects.get(
+            content_type__app_label="main", codename="change_skill",
+        ))
+        self.payload = {
+            "name": "Python", "skill_type": "Software",
+            "description": "Backend development", "image_filename": "python.png",
+        }
+        self.skill = Skill.objects.create(**self.payload)
+        self.list_url = reverse("api:skill-list")
+        self.detail_url = reverse("api:skill-detail", args=[self.skill.pk])
+        self.star_url = reverse("api:skill-star", args=[self.skill.pk])
+
+    def assert_original_data(self):
+        self.assertEqual(Skill.objects.count(), 1)
+        self.skill.refresh_from_db()
+        for field, value in self.payload.items():
+            self.assertEqual(getattr(self.skill, field), value)
+        self.assertEqual(self.skill.starred_by.count(), 0)
+
+    def test_all_roles_read_list_and_detail(self):
+        for user in (None, self.user, self.editor, self.owner):
+            with self.subTest(user=user):
+                self.client.force_authenticate(user=user)
+                response = self.client.get(self.list_url)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.data[0]["id"], str(self.skill.pk))
+                self.assertEqual(self.client.get(self.detail_url).status_code, 200)
+
+    def test_guest_and_user_cannot_write(self):
+        for user in (None, self.user):
+            self.client.force_authenticate(user=user)
+            for method, url, payload in (
+                ("post", self.list_url, self.payload),
+                ("put", self.detail_url, {**self.payload, "name": "Changed"}),
+                ("patch", self.detail_url, {"name": "Changed"}),
+                ("delete", self.detail_url, {}),
+            ):
+                with self.subTest(user=user, method=method):
+                    response = getattr(self.client, method)(url, payload, format="json")
+                    self.assertEqual(response.status_code, 403)
+                    self.assert_original_data()
+
+    def test_editor_updates_but_cannot_create_or_delete(self):
+        self.client.force_authenticate(user=self.editor)
+        self.assertEqual(self.client.post(self.list_url, self.payload).status_code, 403)
+        self.assert_original_data()
+        self.assertEqual(self.client.delete(self.detail_url).status_code, 403)
+        self.assert_original_data()
+        self.assertEqual(self.client.patch(self.detail_url, {"name": "Django"}).status_code, 200)
+        self.skill.refresh_from_db()
+        self.assertEqual(self.skill.name, "Django")
+        self.assertEqual(self.skill.description, self.payload["description"])
+        self.assertEqual(self.client.put(self.detail_url, self.payload).status_code, 200)
+        self.assert_original_data()
+
+    def test_group_name_alone_does_not_grant_editing(self):
+        self.user.groups.add(Group.objects.create(name="Editor"))
+        self.client.force_authenticate(user=self.user)
+        self.assertEqual(self.client.patch(self.detail_url, {"name": "Changed"}).status_code, 403)
+        self.assert_original_data()
+
+    def test_owner_crud_and_put_patch_semantics(self):
+        self.client.force_authenticate(user=self.owner)
+        response = self.client.post(self.list_url, self.payload, format="json")
+        self.assertEqual(response.status_code, 201)
+        created_url = reverse("api:skill-detail", args=[response.data["id"]])
+        self.assertEqual(self.client.put(created_url, {"name": "Incomplete"}).status_code, 400)
+        created = Skill.objects.get(pk=response.data["id"])
+        self.assertEqual(created.name, self.payload["name"])
+        self.assertEqual(self.client.patch(created_url, {"name": "Changed"}).status_code, 200)
+        created.refresh_from_db()
+        self.assertEqual(created.name, "Changed")
+        self.assertEqual(created.description, self.payload["description"])
+        self.assertEqual(self.client.put(created_url, self.payload).status_code, 200)
+        response = self.client.delete(created_url)
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.content, b"")
+        self.assertFalse(Skill.objects.filter(pk=created.pk).exists())
+
+    def test_search_and_missing_objects(self):
+        self.assertEqual(len(self.client.get(self.list_url, {"name": " PYTH "}).data), 1)
+        self.assertEqual(self.client.get(self.list_url, {"name": "missing"}).data, [])
+        self.client.force_authenticate(user=self.owner)
+        missing = uuid.uuid4()
+        detail = reverse("api:skill-detail", args=[missing])
+        for method in ("get", "put", "patch", "delete"):
+            self.assertEqual(getattr(self.client, method)(detail).status_code, 404)
+        self.assertEqual(self.client.post(reverse("api:skill-star", args=[missing])).status_code, 404)
+        self.assert_original_data()
+
+    def test_validation_sanitization_and_read_only_fields(self):
+        self.client.force_authenticate(user=self.owner)
+        for field, value in (
+            ("name", "<b></b>"), ("description", "<p> </p>"),
+            ("image_filename", "<img src='x'>"), ("skill_type", "Other"),
+            ("name", "x" * 101), ("image_filename", "x" * 201),
+        ):
+            response = self.client.post(self.list_url, {**self.payload, field: value}, format="json")
+            self.assertEqual(response.status_code, 400)
+            self.assertIn(field, response.data)
+            self.assert_original_data()
+        response = self.client.patch(self.detail_url, {
+            "name": " <b>Django</b> ", "description": " <p>Clean</p> ",
+            "image_filename": " <b>django.png</b> ",
+            "star_count": 123, "is_starred": True, "starred_by": [self.user.pk],
+        }, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["name"], "Django")
+        self.assertEqual(response.data["description"], "Clean")
+        self.assertEqual(response.data["image_filename"], "django.png")
+        self.assertEqual(response.data["star_count"], 0)
+        self.assertFalse(response.data["is_starred"])
+        self.assertEqual(self.skill.starred_by.count(), 0)
+        self.assertEqual(set(response.data), {
+            "id", "name", "skill_type", "description", "image_filename", "star_count", "is_starred",
+        })
+
+    def test_star_requires_login_and_ignores_forged_identity(self):
+        self.assertEqual(self.client.post(self.star_url).status_code, 403)
+        self.assert_original_data()
+        for user in (self.user, self.editor, self.owner):
+            self.client.force_authenticate(user=user)
+            response = self.client.post(self.star_url, {"user": 999999, "starred_by": [999999]}, format="json")
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.data["is_starred"])
+            self.assertEqual(response.data["star_count"], 1)
+            self.assertEqual(list(self.skill.starred_by.values_list("pk", flat=True)), [user.pk])
+            response = self.client.post(self.star_url)
+            self.assertEqual(response.status_code, 200)
+            self.assertFalse(response.data["is_starred"])
+            self.assertEqual(response.data["star_count"], 0)
+            self.assert_original_data()
+
+    def test_session_mutations_require_csrf(self):
+        for user, method, url, payload in (
+            (self.owner, "post", self.list_url, self.payload),
+            (self.owner, "put", self.detail_url, self.payload),
+            (self.editor, "patch", self.detail_url, {"name": "Changed"}),
+            (self.owner, "delete", self.detail_url, {}),
+            (self.user, "post", self.star_url, {}),
+        ):
+            with self.subTest(user=user, method=method):
+                client = APIClient(enforce_csrf_checks=True)
+                self.assertTrue(client.login(username=user.username, password="test-password"))
+                self.assertEqual(getattr(client, method)(url, payload, format="json").status_code, 403)
+                self.assert_original_data()
+
+    def test_session_with_csrf_allows_editor_update_and_user_star(self):
+        for user, method, url, payload in (
+            (self.editor, "patch", self.detail_url, {"name": "Changed"}),
+            (self.user, "post", self.star_url, {}),
+        ):
+            client = APIClient(enforce_csrf_checks=True)
+            self.assertTrue(client.login(username=user.username, password="test-password"))
+            response = client.get(self.list_url, HTTP_ACCEPT="text/html")
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "Skill List")
+            response = getattr(client, method)(
+                url, payload, format="json", HTTP_X_CSRFTOKEN=client.cookies["csrftoken"].value,
+            )
+            self.assertEqual(response.status_code, 200)
+        self.skill.refresh_from_db()
+        self.assertEqual(self.skill.name, "Changed")
+        self.assertTrue(self.skill.starred_by.filter(pk=self.user.pk).exists())
+
+    def test_prefetch_keeps_list_query_count_constant(self):
+        self.skill.starred_by.add(self.user)
+        for index in range(4):
+            Skill.objects.create(**{**self.payload, "name": f"Skill {index}"})
+        self.client.force_authenticate(user=self.user)
+        with self.assertNumQueries(2):
+            response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 5)
 
 
 class SkillSerializerTest(APITestCase):
