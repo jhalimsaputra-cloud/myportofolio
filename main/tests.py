@@ -58,100 +58,76 @@ class MainTest(TestCase):
         self.assertNotContains(response, "Sedang berlangsung")
 
 class SkillViewTest(TestCase):
- 
-    def test_url_and_template_correct(self):
-        """1. URL dapat diakses dan menggunakan template yang tepat."""
-        # Mengakses URL berdasarkan named route yang kamu buat di HTML
-        response = self.client.get(reverse('main:show_skills'))
- 
-        # Memastikan status respons 200 (OK/Berhasil diakses)
+    def create_skill(self, name="Python", skill_type="Software"):
+        return Skill.objects.create(
+            name=name,
+            skill_type=skill_type,
+            description="Building backend logic.",
+            image_filename="python-logo.png",
+        )
+
+    def get_skills(self, **params):
+        response = self.client.get(reverse("main:get_skills_json"), params)
         self.assertEqual(response.status_code, 200)
-        # Memastikan template yang digunakan sesuai
-        self.assertTemplateUsed(response, 'skill.html') 
- 
-    def test_model_data_appears_in_html_when_data_exists(self):
-        """2. Data model muncul di halaman HTML ketika ada data."""
-        # Setup: Buat data uji coba di database testing
-        Skill.objects.create(
-            name="Python",
-            skill_type="Software",
-            description="Building backend logic, data processing.",
-            image_filename="python-logo.png"
+        return response.json()
+
+    def test_url_and_template_correct(self):
+        """Halaman menyediakan wadah untuk kartu yang dimuat melalui AJAX."""
+        response = self.client.get(reverse("main:show_skills"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "skill.html")
+        self.assertContains(response, 'id="software-grid"')
+        self.assertContains(response, 'id="systems-grid"')
+        self.assertContains(response, reverse("main:get_skills_json"))
+
+    def test_skill_data_available_through_json(self):
+        """Endpoint menyediakan identitas dan isi kartu untuk frontend."""
+        skill = self.create_skill()
+        data = self.get_skills()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["pk"], str(skill.id))
+        fields = data[0]["fields"]
+        self.assertEqual(fields["name"], skill.name)
+        self.assertEqual(fields["description"], skill.description)
+        self.assertEqual(fields["image_filename"], skill.image_filename)
+        self.assertEqual(fields["star_count"], 0)
+        self.assertFalse(fields["is_starred"])
+
+    def test_empty_data_and_empty_state_placeholder(self):
+        """API mengirim daftar kosong; HTML menyediakan pesan untuk frontend."""
+        self.assertEqual(self.get_skills(), [])
+        response = self.client.get(reverse("main:show_skills"))
+        self.assertContains(response, 'id="empty"')
+        self.assertContains(
+            response,
+            "Belum ada skill yang ditambahkan maupun ditemukan.",
         )
-        Skill.objects.create(
-            name="MIPS Assembly",
-            skill_type="Systems",
-            description="Understanding low-level computer architecture.",
-            image_filename="mips-logo.png"
+
+    def test_single_category_data(self):
+        """Data satu kategori tidak menghasilkan entri kategori lainnya."""
+        skill = self.create_skill(name="Java")
+        data = self.get_skills()
+        self.assertEqual(
+            [(item["pk"], item["fields"]["skill_type"]) for item in data],
+            [(str(skill.id), "Software")],
         )
- 
-        # Action: Akses halamannya
-        response = self.client.get(reverse('main:show_skills'))
- 
-        # Assert: Pastikan data yang dibuat tadi ikut ter-render di dalam HTML
-        self.assertContains(response, "Python")
-        self.assertContains(response, "Building backend logic, data processing.")
-        self.assertContains(response, "MIPS Assembly")
- 
-        # Assert tambahan: karena kedua tipe sudah terisi, pesan "belum ada skill"
-        # untuk keduanya seharusnya TIDAK muncul sama sekali
-        self.assertNotContains(response, "Belum ada skill Software Development yang ditambahkan.")
-        self.assertNotContains(response, "Belum ada skill Systems &amp; Architecture yang ditambahkan.")
- 
-    def test_empty_state_message_when_no_data(self):
-        """3. Halaman HTML menampilkan pesan kondisi kosong ketika belum ada data."""
-        # Setup: Kita biarkan database testing kosong tanpa membuat objek Skill
- 
-        # Action: Akses halamannya
-        response = self.client.get(reverse('main:show_skills'))
- 
-        # Assert: Pastikan pesan dari blok {% empty %} di HTML kamu muncul
-        self.assertContains(response, "Belum ada skill Software Development yang ditambahkan.")
-        self.assertContains(response, "Belum ada skill Systems &amp; Architecture yang ditambahkan.")
- 
-    def test_empty_state_shown_only_for_type_without_data(self):
-        """Bonus: kalau cuma salah satu tipe yang punya data, pesan kosong hanya
-        muncul untuk tipe yang memang belum punya skill, bukan keduanya."""
-        Skill.objects.create(
-            name="Java",
-            skill_type="Software",
-            description="Core Java and OOP principles.",
-            image_filename="java-logo.png"
-        )
- 
-        response = self.client.get(reverse('main:show_skills'))
- 
-        # Software sudah ada isinya -> pesan kosong Software tidak boleh muncul
-        self.assertContains(response, "Java")
-        self.assertNotContains(response, "Belum ada skill Software Development yang ditambahkan.")
- 
-        # Systems masih kosong -> pesan kosongnya harus tetap muncul
-        self.assertContains(response, "Belum ada skill Systems &amp; Architecture yang ditambahkan.")
- 
-    def test_skills_are_grouped_under_correct_type_in_context(self):
-        """Bonus: memastikan pemisahan skill per tipe benar di level context,
-        bukan cuma kebetulan sama-sama muncul di HTML."""
-        software_skill = Skill.objects.create(
-            name="Django",
-            skill_type="Software",
-            description="Full-stack web framework.",
-            image_filename="django-logo.png"
-        )
-        systems_skill = Skill.objects.create(
-            name="AVR Assembly",
-            skill_type="Systems",
-            description="Low-level microcontroller programming.",
-            image_filename="avr-logo.png"
-        )
- 
-        response = self.client.get(reverse('main:show_skills'))
- 
-        software_skills = list(response.context['software_skills'])
-        systems_skills = list(response.context['systems_skills'])
- 
-        self.assertIn(software_skill, software_skills)
-        self.assertNotIn(systems_skill, software_skills)
- 
-        self.assertIn(systems_skill, systems_skills)
-        self.assertNotIn(software_skill, systems_skills)
- 
+
+    def test_category_values_preserved_in_json(self):
+        """API mempertahankan kategori yang diperlukan frontend untuk pengelompokan."""
+        software = self.create_skill(name="Django")
+        systems = self.create_skill(name="AVR Assembly", skill_type="Systems")
+        categories = {
+            item["pk"]: item["fields"]["skill_type"]
+            for item in self.get_skills()
+        }
+        self.assertEqual(categories, {
+            str(software.id): "Software",
+            str(systems.id): "Systems",
+        })
+
+    def test_search_is_case_insensitive_and_can_return_empty(self):
+        skill = self.create_skill()
+        self.create_skill(name="Java")
+        data = self.get_skills(name="  PYTH  ")
+        self.assertEqual([item["pk"] for item in data], [str(skill.id)])
+        self.assertEqual(self.get_skills(name="not-found"), [])
