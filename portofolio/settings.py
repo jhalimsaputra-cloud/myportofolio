@@ -32,6 +32,8 @@ PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 DEBUG = not PRODUCTION
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "justin-evan-myportofolio.pws.cs.ui.ac.id"]
+if not PRODUCTION:
+    ALLOWED_HOSTS.append("10.0.2.2")
 
 CSRF_TRUSTED_ORIGINS = [
     "https://justin-evan-myportofolio.pws.cs.ui.ac.id",
@@ -170,4 +172,4 @@ REST_FRAMEWORK = {
     ],
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = not PRODUCTION
