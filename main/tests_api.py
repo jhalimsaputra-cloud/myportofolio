@@ -393,7 +393,10 @@ class ProjectAPITest(APITestCase):
         )
 
     def test_guest_and_visitor_cannot_write(self):
-        for user in (None, self.visitor):
+        for user, expected_post_status in (
+            (None, status.HTTP_401_UNAUTHORIZED),
+            (self.visitor, status.HTTP_403_FORBIDDEN),
+        ):
             self.client.force_authenticate(user=user)
 
             self.assertEqual(
@@ -402,7 +405,7 @@ class ProjectAPITest(APITestCase):
                     self.payload,
                     format="json",
                 ).status_code,
-                status.HTTP_403_FORBIDDEN,
+                expected_post_status,
             )
             self.assertEqual(
                 self.client.patch(
