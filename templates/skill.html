@@ -128,6 +128,24 @@
         );
     }
 
+    function skillImageSource(value) {
+        if (!value) return "";
+        if (/^https?:\/\//i.test(value)) {
+            try {
+                const url = new URL(value);
+                return url.username || url.password ? "" : url.href;
+            } catch {
+                return "";
+            }
+        }
+
+        const segments = value.replace(/^img\//, "").split("/");
+        if (segments.some(segment => !segment || segment === "." || segment === "..")) {
+            return "";
+        }
+        return STATIC_IMAGE_BASE + segments.map(encodeURIComponent).join("/");
+    }
+
     // Membuat kartu skill
     function buildSkillCardElement(skill) {
         const skillId = String(skill.id);
@@ -155,11 +173,12 @@
         );
 
         // Logo
-        const imageHtml = skill.image_filename
+        const imageSource = skillImageSource(skill.image_filename);
+        const imageHtml = imageSource
             ? `
                 <div class="skill-card-icon">
                     <img
-                        src="${escapeHtml(STATIC_IMAGE_BASE + skill.image_filename)}"
+                        src="${escapeHtml(imageSource)}"
                         alt="${name} logo">
                 </div>
             `

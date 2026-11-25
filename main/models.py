@@ -49,7 +49,11 @@ class Skill(models.Model):
     name = models.CharField(max_length=100)
     skill_type = models.CharField(max_length=20, choices=SKILL_TYPES)
     description = models.TextField()
-    image_filename = models.CharField(max_length=200, help_text="Contoh: 'img/java_logo.png' atau 'image_127101.png'")
+    image_filename = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Nama file statis atau URL langsung ke gambar.",
+    )
     starred_by = models.ManyToManyField(User, related_name="starred_skills", blank = True)
 
 class Project(models.Model):

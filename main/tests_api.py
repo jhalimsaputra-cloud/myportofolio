@@ -297,7 +297,7 @@ class SkillSerializerTest(APITestCase):
             ("name", ""), ("name", "   "), ("name", "<b></b>"),
             ("name", "x" * 101),
             ("description", ""), ("description", " <p> </p> "),
-            ("image_filename", ""), ("image_filename", "<img src='x'>"),
+            ("image_filename", "<img src='x'>"),
             ("image_filename", "x" * 201),
             ("skill_type", "Unknown"), ("skill_type", "<b>Software</b>"),
         ]
@@ -356,10 +356,24 @@ class SkillSerializerTest(APITestCase):
     def test_full_update_requires_all_required_fields(self):
         serializer = SkillSerializer(self.skill, data={"name": "Changed"})
         self.assertFalse(serializer.is_valid())
-        for field in ("skill_type", "description", "image_filename"):
+        for field in ("skill_type", "description"):
             self.assertIn(field, serializer.errors)
         self.skill.refresh_from_db()
         self.assertEqual(self.skill.name, self.payload["name"])
+
+    def test_skill_image_can_be_omitted_set_to_url_and_cleared(self):
+        payload = {key: value for key, value in self.payload.items() if key != "image_filename"}
+        creator = SkillSerializer(data=payload)
+        self.assertTrue(creator.is_valid(), creator.errors)
+        skill = creator.save()
+        self.assertEqual(skill.image_filename, "")
+
+        for value in ("https://example.org/skill.png", ""):
+            updater = SkillSerializer(skill, data={"image_filename": value}, partial=True)
+            self.assertTrue(updater.is_valid(), updater.errors)
+            updater.save()
+            skill.refresh_from_db()
+            self.assertEqual(skill.image_filename, value)
 
     def test_invalid_partial_update_preserves_database(self):
         serializer = SkillSerializer(

@@ -97,7 +97,7 @@ class SkillSerializer(serializers.ModelSerializer):
         return self._clean_required_text(value)
 
     def validate_image_filename(self, value):
-        return self._clean_required_text(value)
+        return self._clean_required_text(value) if value else ""
 
     def validate_skill_type(self, value):
         # ChoiceField checks membership before this field-level validator runs.

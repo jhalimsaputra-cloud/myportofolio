@@ -82,7 +82,7 @@ class SkillForm(ModelForm):
             "name": "Nama Skill",
             "skill_type": "Tipe Skill",
             "description": "Deskripsi Skill",
-            "image_filename": "Nama File Gambar",
+            "image_filename": "Nama file atau URL gambar (opsional)",
         }
 
         widgets = {
@@ -127,11 +127,10 @@ class SkillForm(ModelForm):
         return description
 
     def clean_image_filename(self):
-        image_filename = strip_tags(
-            self.cleaned_data["image_filename"]
-        ).strip()
+        value = self.cleaned_data["image_filename"]
+        image_filename = strip_tags(value).strip()
 
-        if not image_filename:
+        if value and not image_filename:
             raise ValidationError(
                 "Nama file gambar tidak boleh hanya berisi tag HTML."
             )
