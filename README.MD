@@ -338,7 +338,7 @@ Keterbatasan yang masih relevan:
 
 ### AI disclosure Tugas 6
 
-Dalam pengerjaan Tugas 6 ini, saya menggunakan bantuan generative AI, yakni Gemini, untuk memahami konsep dasar dan membuat kerangka awal implementasi Django REST Framework (DRF) pada fitur Skills saya. Bantuan AI mencakup pembuatan serializer, permission classes, API views, hingga penulisan test. Namun, kode yang dihasilkan AI masih bersifat umum dan belum sepenuhnya memenuhi spesifikasi rubrik tugas, sehingga saya melakukan modifikasi dan analisis kritis sebagai berikut:
+Dalam pengerjaan Tugas 6, saya menggunakan Gemini untuk memperoleh contoh awal implementasi AJAX pada fitur Skill. Contoh tersebut belum menggunakan DRF dan belum memenuhi seluruh kebutuhan tugas. Selanjutnya, implementasi dikembangkan menggunakan serializer, permission berdasarkan peran, API views, integrasi frontend, dan pengujian. Berikut penyesuaian teknis beserta alasannya.
 
 1. Penyesuaian Serializer dan Validasi Keamanan
   - Output: Contoh awal menggunakan django.core.serializers.serialize() untuk mengubah objek Skill menjadi JSON, tanpa memberikan implementasi serializer DRF dan field perhitungan star.
