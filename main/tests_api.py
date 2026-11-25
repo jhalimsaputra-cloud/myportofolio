@@ -4,6 +4,7 @@ from django.contrib.auth.models import AnonymousUser, Group, Permission, User
 from django.test import RequestFactory
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
 
 from main.models import Project, Skill
@@ -44,7 +45,10 @@ class SkillAPITest(APITestCase):
                 self.assertEqual(self.client.get(self.detail_url).status_code, 200)
 
     def test_guest_and_user_cannot_write(self):
-        for user in (None, self.user):
+        for user, expected_status in (
+            (None, status.HTTP_401_UNAUTHORIZED),
+            (self.user, status.HTTP_403_FORBIDDEN),
+        ):
             self.client.force_authenticate(user=user)
             for method, url, payload in (
                 ("post", self.list_url, self.payload),
@@ -54,8 +58,47 @@ class SkillAPITest(APITestCase):
             ):
                 with self.subTest(user=user, method=method):
                     response = getattr(self.client, method)(url, payload, format="json")
-                    self.assertEqual(response.status_code, 403)
+                    self.assertEqual(response.status_code, expected_status)
                     self.assert_original_data()
+
+    def test_skill_token_login_create_and_logout(self):
+        login = self.client.post(
+            reverse("api:api_token_auth"),
+            {"username": self.owner.username, "password": "test-password"},
+            format="json",
+        )
+        self.assertEqual(login.status_code, status.HTTP_200_OK)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {login.data['token']}")
+
+        created = self.client.post(self.list_url, self.payload, format="json")
+        self.assertEqual(created.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Skill.objects.filter(pk=created.data["id"]).exists())
+
+        self.assertEqual(
+            self.client.post(reverse("api:api_logout")).status_code,
+            status.HTTP_204_NO_CONTENT,
+        )
+        expired = self.client.post(self.list_url, self.payload, format="json")
+        self.assertEqual(expired.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(expired["WWW-Authenticate"], "Token")
+        self.assertEqual(Skill.objects.count(), 2)
+
+    def test_skill_token_patch_respects_editor_permission(self):
+        for user, expected_status in (
+            (self.user, status.HTTP_403_FORBIDDEN),
+            (self.editor, status.HTTP_200_OK),
+        ):
+            token = Token.objects.create(user=user)
+            self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+            response = self.client.patch(
+                self.detail_url, {"name": "Edited"}, format="json",
+            )
+            self.assertEqual(response.status_code, expected_status)
+            if response.status_code == status.HTTP_403_FORBIDDEN:
+                self.assert_original_data()
+        self.skill.refresh_from_db()
+        self.assertEqual(self.skill.name, "Edited")
+        self.assertEqual(self.skill.description, self.payload["description"])
 
     def test_editor_updates_but_cannot_create_or_delete(self):
         self.client.force_authenticate(user=self.editor)
