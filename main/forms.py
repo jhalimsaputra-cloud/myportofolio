@@ -104,7 +104,7 @@ class SkillForm(ModelForm):
 
             "image_filename": TextInput(
                 attrs={
-                    "placeholder": "java.png",
+                    "placeholder": "https://example.com/gambar.png",
                     "maxlength": 200,
                 }
             ),
